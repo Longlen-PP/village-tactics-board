@@ -723,11 +723,23 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  const ADMIN_EMAIL = "admin@village-tactics.local";
+  // Five separate admin slots, each its own Firebase Auth user with its
+  // own PIN — admin1@village-tactics.local .. admin5@village-tactics.local.
+  // Login tries every slot at once with whatever PIN was typed and takes
+  // whichever one succeeds, so the UI can stay a single PIN field without
+  // needing to know in advance whose PIN it is.
+  const ADMIN_SLOT_COUNT = 5;
+  const ADMIN_EMAIL_RE = /^admin[1-5]@village-tactics\.local$/;
 
   window.fb = {
-    ADMIN_UID: "lwO6EgdmjoYOe7yyAOQ8fVdIB2C3",
-    signIn: (pin) => signInWithEmailAndPassword(auth, ADMIN_EMAIL, pin),
+    isAdminEmail: (email) => !!email && ADMIN_EMAIL_RE.test(email),
+    signIn: (pin) => {
+      const attempts = [];
+      for (let i = 1; i <= ADMIN_SLOT_COUNT; i++){
+        attempts.push(signInWithEmailAndPassword(auth, `admin${i}@village-tactics.local`, pin));
+      }
+      return Promise.any(attempts);
+    },
     signOut: () => signOut(auth),
     onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
     watchBoard: (cb) => onValue(ref(db, "board/current"), (snap) => cb(snap.val())),
@@ -1689,7 +1701,7 @@
   var boardBootstrapped = false;
   function initFirebaseSync(){
     window.fb.onAuthStateChanged(function(user){
-      isAdmin = !!(user && user.uid === window.fb.ADMIN_UID);
+      isAdmin = !!(user && window.fb.isAdminEmail(user.email));
       applyAdminUI();
     });
     // Every client — admin or viewer — applies live updates from Firebase.
