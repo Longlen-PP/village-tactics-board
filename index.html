@@ -96,27 +96,6 @@
     max-width:520px;
     text-wrap:balance;
   }
-  .matchday-meta{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:6px 10px;
-    color:var(--ink-dim);
-    font-size:.86rem;
-  }
-  .matchday-meta span.vs{color:var(--ink-faint); font-weight:700;}
-  .matchday-meta input{
-    background:transparent;
-    border:none;
-    border-bottom:1px dashed var(--line-strong);
-    color:var(--ink-dim);
-    padding:2px 2px;
-    font-size:.86rem;
-    min-width:70px;
-  }
-  .matchday-meta input::placeholder{color:var(--ink-faint);}
-  .matchday-meta input:focus{color:var(--ink);}
-
   .btn{
     appearance:none;
     border:1px solid var(--line-strong);
@@ -378,8 +357,12 @@
     cursor:grab;
     user-select:none;
     -webkit-user-select:none;
+    transition: left .12s linear, top .12s linear;
   }
   .token:active{cursor:grabbing;}
+  @media (prefers-reduced-motion: reduce){
+    .token{ transition:none; }
+  }
   .token .badge{
     width:34px; height:34px;
     border-radius:50%;
@@ -544,14 +527,6 @@
     <div class="masthead-left">
       <div class="eyebrow">Match Plan · Tactics Board</div>
       <input class="team-name" id="teamName" value="My Team" maxlength="28" aria-label="Team name">
-      <div class="matchday-meta">
-        <span class="vs">VS</span>
-        <input id="oppName" placeholder="Opponent name" maxlength="24">
-        <span>·</span>
-        <input id="matchDate" placeholder="Match date">
-        <span>·</span>
-        <input id="venue" placeholder="Venue" maxlength="24">
-      </div>
     </div>
     <div class="masthead-right no-print">
       <div id="authLoggedOut">
@@ -948,9 +923,6 @@
     slotList: document.getElementById("slotList"),
     toast: document.getElementById("toast"),
     teamName: document.getElementById("teamName"),
-    oppName: document.getElementById("oppName"),
-    matchDate: document.getElementById("matchDate"),
-    venue: document.getElementById("venue"),
     boardToolbar: document.getElementById("boardToolbar"),
     savePanel: document.getElementById("savePanel"),
     addBenchWrap: document.getElementById("addBenchWrap"),
@@ -1064,13 +1036,21 @@
     showToast(o === "landscape" ? "Landscape pitch" : "Portrait pitch");
   }
 
-  function makeTokenDraggable(el, playerObj){
+  // getPlayerObj is a function (not a fixed object) because reused DOM
+  // elements can outlive the object they were created for — a remote
+  // snapshot replaces state.players/oppPlayers wholesale, so the drag
+  // handler always looks up the *current* object for this element by id
+  // rather than dragging a stale, disconnected copy.
+  function makeTokenDraggable(el, getPlayerObj){
     el.addEventListener("pointerdown", function(e){
       if(!isAdmin || state.mode !== "move") return;
       e.preventDefault();
       el.setPointerCapture(e.pointerId);
       localGestureActive = true;
+      el.style.transition = "none";
       function onMove(ev){
+        var playerObj = getPlayerObj();
+        if(!playerObj) return;
         var p = pointToPercent(ev, els.pitchWrap);
         playerObj.x = clamp(p.x,3,97);
         playerObj.y = clamp(p.y,3,97);
@@ -1083,43 +1063,76 @@
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
         localGestureActive = false;
+        el.style.transition = "";
       }
       el.addEventListener("pointermove", onMove);
       el.addEventListener("pointerup", onUp);
     });
   }
 
+  // Reused (not rebuilt) per player id, so a token already on the pitch
+  // just has its left/top updated — which is what lets the CSS transition
+  // on .token smooth out the gaps between throttled remote updates instead
+  // of the whole layer flickering/teleporting every sync tick.
+  var tokenEls = {};
   function renderTokens(){
     markDirty();
-    els.tokensLayer.innerHTML = "";
+    var seen = {};
     state.players.forEach(function(p){
-      var t = document.createElement("div");
+      seen[p.id] = true;
+      var t = tokenEls[p.id];
+      if(!t){
+        t = document.createElement("div");
+        t.dataset.id = p.id;
+        els.tokensLayer.appendChild(t);
+        makeTokenDraggable(t, function(){
+          return state.players.find(function(x){ return x.id === t.dataset.id; });
+        });
+        tokenEls[p.id] = t;
+      }
       t.className = "token" + (p.role === "GK" ? " gk" : "");
       t.style.left = p.x + "%";
       t.style.top = p.y + "%";
       t.innerHTML =
         '<div class="badge">' + p.num + '</div>' +
         '<div class="label">' + escapeHtml(p.name) + '</div>';
-      els.tokensLayer.appendChild(t);
-      makeTokenDraggable(t, p);
+    });
+    Object.keys(tokenEls).forEach(function(id){
+      if(!seen[id]){ tokenEls[id].remove(); delete tokenEls[id]; }
     });
   }
 
+  var oppTokenEls = {};
   function renderOpponent(){
     markDirty();
-    els.oppLayer.innerHTML = "";
     els.oppLayer.style.display = state.showOpponent ? "block" : "none";
-    if(!state.showOpponent) return;
-    state.oppPlayers.forEach(function(p){
-      var t = document.createElement("div");
+    if(!state.showOpponent){
+      Object.keys(oppTokenEls).forEach(function(key){ oppTokenEls[key].remove(); delete oppTokenEls[key]; });
+      return;
+    }
+    var seen = {};
+    state.oppPlayers.forEach(function(p, idx){
+      var key = String(idx);
+      seen[key] = true;
+      var t = oppTokenEls[key];
+      if(!t){
+        t = document.createElement("div");
+        t.dataset.idx = key;
+        els.oppLayer.appendChild(t);
+        makeTokenDraggable(t, function(){
+          return state.oppPlayers[parseInt(t.dataset.idx,10)];
+        });
+        oppTokenEls[key] = t;
+      }
       t.className = "token opp" + (p.role === "GK" ? " gk" : "");
       t.style.left = p.x + "%";
       t.style.top = p.y + "%";
       t.innerHTML =
         '<div class="badge">' + p.num + '</div>' +
         '<div class="label">' + escapeHtml(p.role) + '</div>';
-      els.oppLayer.appendChild(t);
-      makeTokenDraggable(t, p);
+    });
+    Object.keys(oppTokenEls).forEach(function(key){
+      if(!seen[key]){ oppTokenEls[key].remove(); delete oppTokenEls[key]; }
     });
   }
 
@@ -1512,9 +1525,6 @@
   // ---------- notes / header fields ----------
   els.notes.addEventListener("input", function(){ state.notes = els.notes.value; markDirty(); });
   els.teamName.addEventListener("input", markDirty);
-  els.oppName.addEventListener("input", markDirty);
-  els.matchDate.addEventListener("input", markDirty);
-  els.venue.addEventListener("input", markDirty);
 
   // ---------- save / load ----------
   var STORAGE_KEY = "tacticsBoard.slots.v2";
@@ -1530,9 +1540,6 @@
     return {
       orientation: state.orientation,
       teamName: els.teamName.value,
-      oppName: els.oppName.value,
-      matchDate: els.matchDate.value,
-      venue: els.venue.value,
       formation: state.formation,
       players: state.players,
       bench: state.bench,
@@ -1550,9 +1557,6 @@
 
   function applySnapshot(snap){
     els.teamName.value = snap.teamName || "My Team";
-    els.oppName.value = snap.oppName || "";
-    els.matchDate.value = snap.matchDate || "";
-    els.venue.value = snap.venue || "";
     state.orientation = snap.orientation || "landscape";
     state.formation = snap.formation || "442";
     state.players = snap.players || buildStarters(state.formation, state.orientation);
@@ -1652,9 +1656,6 @@
     els.viewOnlyBanner.style.display = isAdmin ? "none" : "block";
     els.pitchWrap.classList.toggle("view-only", !isAdmin);
     els.teamName.disabled = !isAdmin;
-    els.oppName.disabled = !isAdmin;
-    els.matchDate.disabled = !isAdmin;
-    els.venue.disabled = !isAdmin;
     els.notes.disabled = !isAdmin;
     els.authLoggedOut.style.display = isAdmin ? "none" : "";
     els.authLoggedIn.style.display = isAdmin ? "" : "none";
@@ -1711,7 +1712,7 @@
         fbDirty = false;
         window.fb.pushBoard(snapshot());
       }
-    }, 300);
+    }, 120);
   }
   if(window.fb){ initFirebaseSync(); }
   else { window.addEventListener("fb-ready", initFirebaseSync); }
