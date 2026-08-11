@@ -142,6 +142,35 @@
   .btn.danger-outline:hover{background:var(--danger); color:var(--danger-ink);}
   .btn.tiny{padding:4px 9px; font-size:.72rem; border-radius:5px;}
   .btn[disabled]{opacity:.4; cursor:not-allowed;}
+  input:disabled, textarea:disabled, select:disabled{ opacity:.55; cursor:not-allowed; }
+
+  .masthead-right{display:flex; gap:10px; align-self:center; position:relative;}
+  .admin-badge{
+    font-size:.78rem; font-weight:700; color:var(--accent);
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .auth-popover{
+    position:absolute; top:calc(100% + 8px); right:0;
+    background:var(--bg-panel); border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm); padding:10px; box-shadow:var(--shadow);
+    display:none; flex-direction:column; gap:6px; width:200px; z-index:20;
+  }
+  .auth-popover.show{display:flex;}
+  .auth-popover input{
+    background:var(--bg-raised); border:1px solid var(--line-strong); border-radius:5px;
+    color:var(--ink); padding:6px 8px; font-size:.8rem;
+  }
+  .auth-error{color:var(--danger); font-size:.72rem; min-height:14px;}
+
+  .view-only-banner{
+    background:rgba(226,166,59,.12); border:1px solid rgba(226,166,59,.35);
+    color:var(--ink-dim); font-size:.8rem; font-weight:600;
+    padding:8px 14px; border-radius:var(--radius-sm);
+    text-align:center;
+  }
+  .pitch-wrap.view-only .token,
+  .pitch-wrap.view-only .zone,
+  .pitch-wrap.view-only .drawings-svg{ pointer-events:none !important; cursor:default !important; }
 
   /* ---------- Workspace layout ---------- */
   .workspace{
@@ -524,12 +553,29 @@
         <input id="venue" placeholder="Venue" maxlength="24">
       </div>
     </div>
+    <div class="masthead-right no-print">
+      <div id="authLoggedOut">
+        <button class="btn tiny" id="adminLoginToggle" type="button">🔒 Admin Login</button>
+        <div class="auth-popover" id="authPopover">
+          <input type="email" id="authEmail" placeholder="Email" autocomplete="username">
+          <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
+          <button class="btn tiny primary" id="authSubmitBtn" type="button">Log in</button>
+          <div class="auth-error" id="authError"></div>
+        </div>
+      </div>
+      <div id="authLoggedIn" style="display:none;">
+        <span class="admin-badge">🟢 Admin</span>
+        <button class="btn tiny" id="authLogoutBtn" type="button">Log out</button>
+      </div>
+    </div>
   </header>
+
+  <div class="view-only-banner no-print" id="viewOnlyBanner">👀 View only — connected live. Log in as admin to edit.</div>
 
   <div class="workspace">
 
     <section class="panel board-panel">
-      <div class="board-toolbar no-print">
+      <div class="board-toolbar no-print" id="boardToolbar" style="display:none;">
         <div class="toolbar-row">
           <span class="toolbar-row-label">Setup</span>
           <div class="field">
@@ -597,7 +643,7 @@
         </div>
       </div>
 
-      <div class="pitch-wrap" id="pitchWrap">
+      <div class="pitch-wrap view-only" id="pitchWrap">
         <svg class="markings" id="markingsPortrait" viewBox="0 0 68 106" preserveAspectRatio="xMidYMid meet" aria-hidden="true" style="display:none;">
           <rect x="1" y="1" width="66" height="104"></rect>
           <line x1="1" y1="53" x2="67" y2="53"></line>
@@ -658,7 +704,7 @@
       <div class="panel">
         <h2 class="section-title">Bench <span class="count" id="benchCount">0</span></h2>
         <div id="benchList"></div>
-        <div class="add-bench no-print">
+        <div class="add-bench no-print" id="addBenchWrap" style="display:none;">
           <button class="btn tiny" id="addBenchBtn">+ Add Substitute</button>
         </div>
       </div>
@@ -668,7 +714,7 @@
         <textarea class="notes" id="notes" placeholder="e.g. High press from the opponent's third / switch to 4-2-3-1 for the last 20 minutes..."></textarea>
       </div>
 
-      <div class="panel no-print">
+      <div class="panel no-print" id="savePanel" style="display:none;">
         <h2 class="section-title">Saved Plans</h2>
         <div class="save-row">
           <input id="slotNameInput" placeholder="Name this plan, e.g. Home game" maxlength="30">
@@ -684,9 +730,43 @@
 
 <div class="toast" id="toast"></div>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKlmIkZGOLfUZF9M41btN5QPSACTwbGZk",
+    authDomain: "village-tactics-board.firebaseapp.com",
+    databaseURL: "https://village-tactics-board-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "village-tactics-board",
+    storageBucket: "village-tactics-board.firebasestorage.app",
+    messagingSenderId: "696437137313",
+    appId: "1:696437137313:web:a4088e903ded3a455c75e0",
+    measurementId: "G-FFC7N9RWXT"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  window.fb = {
+    ADMIN_UID: "VDyZgbKS2LYg0EzNSdXB5uMDK4X2",
+    signIn: (email, pw) => signInWithEmailAndPassword(auth, email, pw),
+    signOut: () => signOut(auth),
+    onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
+    watchBoard: (cb) => onValue(ref(db, "board/current"), (snap) => cb(snap.val())),
+    pushBoard: (data) => set(ref(db, "board/current"), data)
+  };
+  window.dispatchEvent(new Event("fb-ready"));
+</script>
+
 <script>
 (function(){
   "use strict";
+
+  var isAdmin = false;
+  var fbDirty = false;
+  function markDirty(){ if(isAdmin) fbDirty = true; }
 
   var FORMATIONS = {
     "442": { label:"4-4-2", group:"4 at the back", pos:[
@@ -867,7 +947,20 @@
     teamName: document.getElementById("teamName"),
     oppName: document.getElementById("oppName"),
     matchDate: document.getElementById("matchDate"),
-    venue: document.getElementById("venue")
+    venue: document.getElementById("venue"),
+    boardToolbar: document.getElementById("boardToolbar"),
+    savePanel: document.getElementById("savePanel"),
+    addBenchWrap: document.getElementById("addBenchWrap"),
+    viewOnlyBanner: document.getElementById("viewOnlyBanner"),
+    authLoggedOut: document.getElementById("authLoggedOut"),
+    authLoggedIn: document.getElementById("authLoggedIn"),
+    adminLoginToggle: document.getElementById("adminLoginToggle"),
+    authPopover: document.getElementById("authPopover"),
+    authEmail: document.getElementById("authEmail"),
+    authPassword: document.getElementById("authPassword"),
+    authSubmitBtn: document.getElementById("authSubmitBtn"),
+    authError: document.getElementById("authError"),
+    authLogoutBtn: document.getElementById("authLogoutBtn")
   };
 
   var toastTimer = null;
@@ -920,14 +1013,16 @@
     });
   }
   function refreshColorSwatches(){
-    buildPaletteSwatches(els.zoneColorSwatches, function(){ return state.zoneColor; }, function(hex){ state.zoneColor = hex; });
+    buildPaletteSwatches(els.zoneColorSwatches, function(){ return state.zoneColor; }, function(hex){ state.zoneColor = hex; markDirty(); });
     buildPaletteSwatches(els.teamAColorSwatches, function(){ return state.tokenColorA; }, function(hex){
       state.tokenColorA = hex;
       document.documentElement.style.setProperty("--token-a", hex);
+      markDirty();
     });
     buildPaletteSwatches(els.teamBColorSwatches, function(){ return state.tokenColorB; }, function(hex){
       state.tokenColorB = hex;
       document.documentElement.style.setProperty("--token-b", hex);
+      markDirty();
     });
   }
   refreshColorSwatches();
@@ -969,7 +1064,7 @@
 
   function makeTokenDraggable(el, playerObj){
     el.addEventListener("pointerdown", function(e){
-      if(state.mode !== "move") return;
+      if(!isAdmin || state.mode !== "move") return;
       e.preventDefault();
       el.setPointerCapture(e.pointerId);
       function onMove(ev){
@@ -978,6 +1073,7 @@
         playerObj.y = clamp(p.y,3,97);
         el.style.left = playerObj.x + "%";
         el.style.top = playerObj.y + "%";
+        markDirty();
       }
       function onUp(ev){
         el.releasePointerCapture(ev.pointerId);
@@ -990,6 +1086,7 @@
   }
 
   function renderTokens(){
+    markDirty();
     els.tokensLayer.innerHTML = "";
     state.players.forEach(function(p){
       var t = document.createElement("div");
@@ -1005,6 +1102,7 @@
   }
 
   function renderOpponent(){
+    markDirty();
     els.oppLayer.innerHTML = "";
     els.oppLayer.style.display = state.showOpponent ? "block" : "none";
     if(!state.showOpponent) return;
@@ -1029,6 +1127,7 @@
 
   // ---------- zones (translucent rectangle / circle markers) ----------
   function renderZones(){
+    markDirty();
     els.zonesLayer.innerHTML = "";
     state.zones.forEach(function(z){ els.zonesLayer.appendChild(buildZoneEl(z)); });
   }
@@ -1049,6 +1148,7 @@
     remove.addEventListener("pointerdown", function(e){ e.stopPropagation(); });
     remove.addEventListener("click", function(e){
       e.stopPropagation();
+      if(!isAdmin) return;
       state.zones = state.zones.filter(function(x){ return x.id !== z.id; });
       if(state.selectedZoneId === z.id) state.selectedZoneId = null;
       renderZones();
@@ -1057,6 +1157,7 @@
     var handle = document.createElement("div");
     handle.className = "zone-handle no-print";
     handle.addEventListener("pointerdown", function(e){
+      if(!isAdmin) return;
       e.stopPropagation();
       e.preventDefault();
       handle.setPointerCapture(e.pointerId);
@@ -1078,6 +1179,7 @@
         el.style.top = (z.y - z.h/2) + "%";
         el.style.width = z.w + "%";
         el.style.height = z.h + "%";
+        markDirty();
       }
       function onUp(ev){
         handle.releasePointerCapture(ev.pointerId);
@@ -1092,7 +1194,7 @@
     el.appendChild(handle);
 
     el.addEventListener("pointerdown", function(e){
-      if(state.mode !== "move") return;
+      if(!isAdmin || state.mode !== "move") return;
       if(e.target === remove || e.target === handle) return;
       e.preventDefault();
       el.setPointerCapture(e.pointerId);
@@ -1106,6 +1208,7 @@
         z.y = clamp(p.y - offY, 0, 100);
         el.style.left = (z.x - z.w/2) + "%";
         el.style.top = (z.y - z.h/2) + "%";
+        markDirty();
       }
       function onUp(ev){
         el.releasePointerCapture(ev.pointerId);
@@ -1154,6 +1257,7 @@
 
   // ---------- squad panels ----------
   function renderStarterList(){
+    markDirty();
     els.starterList.innerHTML = "";
     state.players.forEach(function(p){
       var row = document.createElement("div");
@@ -1165,6 +1269,8 @@
         '<span class="role">' + p.role + '</span>';
       var numInput = row.querySelector(".num");
       var nameInput = row.querySelector(".name");
+      numInput.disabled = !isAdmin;
+      nameInput.disabled = !isAdmin;
       numInput.addEventListener("input", function(){
         var v = parseInt(numInput.value,10);
         p.num = isNaN(v) ? p.num : v;
@@ -1176,15 +1282,17 @@
         renderTokens();
       });
       row.addEventListener("click", function(e){
+        if(!isAdmin) return;
         if(e.target === numInput || e.target === nameInput) return;
         if(state.pendingSubId){ doSub(state.pendingSubId, p.id); }
       });
-      if(state.pendingSubId) row.style.cursor = "pointer";
+      if(isAdmin && state.pendingSubId) row.style.cursor = "pointer";
       els.starterList.appendChild(row);
     });
   }
 
   function renderBenchList(){
+    markDirty();
     els.benchList.innerHTML = "";
     els.benchCount.textContent = state.bench.length;
     if(state.bench.length === 0){
@@ -1207,6 +1315,10 @@
       var nameInput = row.querySelector(".name");
       var subBtn = row.querySelector(".sub-btn");
       var delBtn = row.querySelector(".danger-outline");
+      numInput.disabled = !isAdmin;
+      nameInput.disabled = !isAdmin;
+      subBtn.style.display = isAdmin ? "" : "none";
+      delBtn.style.display = isAdmin ? "" : "none";
       numInput.addEventListener("input", function(){
         var v = parseInt(numInput.value,10);
         b.num = isNaN(v) ? b.num : v;
@@ -1324,6 +1436,7 @@
   var ARROW_SIZE = 2.0;
 
   function renderDrawings(){
+    markDirty();
     els.drawGroup.innerHTML = "";
     state.drawings.forEach(function(d){
       if(d.points.length < 2) return;
@@ -1355,7 +1468,7 @@
   }
 
   els.drawSvg.addEventListener("pointerdown", function(e){
-    if(state.mode !== "draw") return;
+    if(!isAdmin || state.mode !== "draw") return;
     e.preventDefault();
     els.drawSvg.setPointerCapture(e.pointerId);
     var p0 = pointToPitchUnits(e, els.pitchWrap);
@@ -1387,7 +1500,11 @@
   });
 
   // ---------- notes / header fields ----------
-  els.notes.addEventListener("input", function(){ state.notes = els.notes.value; });
+  els.notes.addEventListener("input", function(){ state.notes = els.notes.value; markDirty(); });
+  els.teamName.addEventListener("input", markDirty);
+  els.oppName.addEventListener("input", markDirty);
+  els.matchDate.addEventListener("input", markDirty);
+  els.venue.addEventListener("input", markDirty);
 
   // ---------- save / load ----------
   var STORAGE_KEY = "tacticsBoard.slots.v2";
@@ -1517,9 +1634,68 @@
     showToast('Saved plan "' + name + '"');
   });
 
+  // ---------- admin auth / live sync ----------
+  function applyAdminUI(){
+    els.boardToolbar.style.display = isAdmin ? "" : "none";
+    els.savePanel.style.display = isAdmin ? "" : "none";
+    els.addBenchWrap.style.display = isAdmin ? "" : "none";
+    els.viewOnlyBanner.style.display = isAdmin ? "none" : "block";
+    els.pitchWrap.classList.toggle("view-only", !isAdmin);
+    els.teamName.disabled = !isAdmin;
+    els.oppName.disabled = !isAdmin;
+    els.matchDate.disabled = !isAdmin;
+    els.venue.disabled = !isAdmin;
+    els.notes.disabled = !isAdmin;
+    els.authLoggedOut.style.display = isAdmin ? "none" : "";
+    els.authLoggedIn.style.display = isAdmin ? "" : "none";
+    els.authPopover.classList.remove("show");
+    renderStarterList();
+    renderBenchList();
+  }
+
+  els.adminLoginToggle.addEventListener("click", function(){
+    els.authPopover.classList.toggle("show");
+  });
+  els.authSubmitBtn.addEventListener("click", function(){
+    els.authError.textContent = "";
+    var email = els.authEmail.value.trim();
+    var pw = els.authPassword.value;
+    if(!email || !pw){ els.authError.textContent = "Enter email and password"; return; }
+    if(!window.fb){ els.authError.textContent = "Still connecting, try again"; return; }
+    window.fb.signIn(email, pw).then(function(){
+      els.authEmail.value = "";
+      els.authPassword.value = "";
+    }).catch(function(){
+      els.authError.textContent = "Login failed — check email/password";
+    });
+  });
+  els.authLogoutBtn.addEventListener("click", function(){
+    if(window.fb) window.fb.signOut();
+  });
+
+  function initFirebaseSync(){
+    window.fb.onAuthStateChanged(function(user){
+      isAdmin = !!(user && user.uid === window.fb.ADMIN_UID);
+      applyAdminUI();
+      if(isAdmin){ window.fb.pushBoard(snapshot()); }
+    });
+    window.fb.watchBoard(function(data){
+      if(!isAdmin && data){ applySnapshot(data); }
+    });
+    setInterval(function(){
+      if(fbDirty && isAdmin){
+        fbDirty = false;
+        window.fb.pushBoard(snapshot());
+      }
+    }, 300);
+  }
+  if(window.fb){ initFirebaseSync(); }
+  else { window.addEventListener("fb-ready", initFirebaseSync); }
+
   // ---------- init ----------
   setMode("move");
   syncOrientationVisuals();
+  applyAdminUI();
   renderTokens();
   renderOpponent();
   renderZones();
