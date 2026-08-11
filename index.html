@@ -557,9 +557,8 @@
       <div id="authLoggedOut">
         <button class="btn tiny" id="adminLoginToggle" type="button">🔒 Admin Login</button>
         <div class="auth-popover" id="authPopover">
-          <input type="email" id="authEmail" placeholder="Email" autocomplete="username">
-          <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
-          <button class="btn tiny primary" id="authSubmitBtn" type="button">Log in</button>
+          <input type="password" id="authPassword" placeholder="Admin PIN" autocomplete="current-password">
+          <button class="btn tiny primary" id="authSubmitBtn" type="button">Unlock</button>
           <div class="auth-error" id="authError"></div>
         </div>
       </div>
@@ -749,9 +748,11 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+  const ADMIN_EMAIL = "admin@village-tactics.local";
+
   window.fb = {
-    ADMIN_UID: "VDyZgbKS2LYg0EzNSdXB5uMDK4X2",
-    signIn: (email, pw) => signInWithEmailAndPassword(auth, email, pw),
+    ADMIN_UID: "lwO6EgdmjoYOe7yyAOQ8fVdIB2C3",
+    signIn: (pin) => signInWithEmailAndPassword(auth, ADMIN_EMAIL, pin),
     signOut: () => signOut(auth),
     onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
     watchBoard: (cb) => onValue(ref(db, "board/current"), (snap) => cb(snap.val())),
@@ -956,7 +957,6 @@
     authLoggedIn: document.getElementById("authLoggedIn"),
     adminLoginToggle: document.getElementById("adminLoginToggle"),
     authPopover: document.getElementById("authPopover"),
-    authEmail: document.getElementById("authEmail"),
     authPassword: document.getElementById("authPassword"),
     authSubmitBtn: document.getElementById("authSubmitBtn"),
     authError: document.getElementById("authError"),
@@ -1655,18 +1655,20 @@
 
   els.adminLoginToggle.addEventListener("click", function(){
     els.authPopover.classList.toggle("show");
+    if(els.authPopover.classList.contains("show")) els.authPassword.focus();
+  });
+  els.authPassword.addEventListener("keydown", function(e){
+    if(e.key === "Enter") els.authSubmitBtn.click();
   });
   els.authSubmitBtn.addEventListener("click", function(){
     els.authError.textContent = "";
-    var email = els.authEmail.value.trim();
-    var pw = els.authPassword.value;
-    if(!email || !pw){ els.authError.textContent = "Enter email and password"; return; }
+    var pin = els.authPassword.value;
+    if(!pin){ els.authError.textContent = "Enter the admin PIN"; return; }
     if(!window.fb){ els.authError.textContent = "Still connecting, try again"; return; }
-    window.fb.signIn(email, pw).then(function(){
-      els.authEmail.value = "";
+    window.fb.signIn(pin).then(function(){
       els.authPassword.value = "";
     }).catch(function(){
-      els.authError.textContent = "Login failed — check email/password";
+      els.authError.textContent = "Wrong PIN";
     });
   });
   els.authLogoutBtn.addEventListener("click", function(){
