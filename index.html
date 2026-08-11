@@ -1,0 +1,1532 @@
+<title>Village Tactics Board</title>
+<style>
+  :root{
+    --bg:#101f16;
+    --bg-raised:#152a1c;
+    --bg-panel:#17301f;
+    --bg-panel-2:#1c3a25;
+    --pitch-a:#2f6b3c;
+    --pitch-b:#2a6136;
+    --pitch-line:rgba(238,243,234,.82);
+    --ink:#eef0e6;
+    --ink-dim:#9fb3a0;
+    --ink-faint:#5f7d67;
+    --accent:#e2a63b;
+    --accent-ink:#241705;
+    --team-b:#5b8ac0;
+    --danger:#d1495b;
+    --danger-ink:#2a0a0e;
+    --line:rgba(238,240,230,.12);
+    --line-strong:rgba(238,240,230,.22);
+    --shadow:0 10px 28px rgba(0,0,0,.38);
+    --radius-sm:6px;
+    --radius-md:10px;
+
+    --token-a:#e2a63b;
+    --token-b:#5b8ac0;
+
+    --font-display: "Arial Black","Arial Narrow",Arial,sans-serif;
+    --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --font-mono: ui-monospace,"SF Mono","Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:var(--accent-ink);}
+  a{color:var(--accent);}
+  button{font-family:inherit;}
+  input,textarea,select,button{
+    font-family:inherit;
+    color:inherit;
+  }
+  :focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .btn, .token, .seg button, .slot-row{ transition: background-color .15s ease, border-color .15s ease, transform .1s ease, opacity .15s ease; }
+  }
+
+  .app{
+    max-width:1640px;
+    margin:0 auto;
+    padding:28px 24px 64px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+
+  /* ---------- Header / masthead ---------- */
+  .masthead{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px 28px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--line-strong);
+  }
+  .masthead-left{display:flex; flex-direction:column; gap:6px; min-width:260px;}
+  .eyebrow{
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:700;
+  }
+  .team-name{
+    font-family:var(--font-display);
+    font-weight:900;
+    font-size:clamp(1.7rem,3.6vw,2.5rem);
+    letter-spacing:-.01em;
+    text-transform:uppercase;
+    background:transparent;
+    border:none;
+    color:var(--ink);
+    padding:2px 0;
+    width:100%;
+    max-width:520px;
+    text-wrap:balance;
+  }
+  .matchday-meta{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px 10px;
+    color:var(--ink-dim);
+    font-size:.86rem;
+  }
+  .matchday-meta span.vs{color:var(--ink-faint); font-weight:700;}
+  .matchday-meta input{
+    background:transparent;
+    border:none;
+    border-bottom:1px dashed var(--line-strong);
+    color:var(--ink-dim);
+    padding:2px 2px;
+    font-size:.86rem;
+    min-width:70px;
+  }
+  .matchday-meta input::placeholder{color:var(--ink-faint);}
+  .matchday-meta input:focus{color:var(--ink);}
+
+  .btn{
+    appearance:none;
+    border:1px solid var(--line-strong);
+    background:var(--bg-panel);
+    color:var(--ink);
+    padding:8px 14px;
+    border-radius:var(--radius-sm);
+    font-size:.82rem;
+    font-weight:600;
+    cursor:pointer;
+    letter-spacing:.01em;
+    white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--accent-ink);
+    font-weight:800;
+  }
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn.danger-outline{border-color:var(--danger); color:var(--danger);}
+  .btn.danger-outline:hover{background:var(--danger); color:var(--danger-ink);}
+  .btn.tiny{padding:4px 9px; font-size:.72rem; border-radius:5px;}
+  .btn[disabled]{opacity:.4; cursor:not-allowed;}
+
+  /* ---------- Workspace layout ---------- */
+  .workspace{
+    display:grid;
+    grid-template-columns:minmax(0,2.3fr) minmax(300px,1fr);
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:1000px){
+    .workspace{grid-template-columns:1fr;}
+  }
+
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:16px 16px 18px;
+    box-shadow:var(--shadow);
+  }
+  h2.section-title{
+    font-size:.74rem;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:var(--ink-dim);
+    font-weight:700;
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  h2.section-title .count{
+    font-family:var(--font-mono);
+    color:var(--accent);
+    font-weight:700;
+    letter-spacing:0;
+  }
+
+  /* ---------- Board toolbar ---------- */
+  .board-panel{padding:14px 16px 16px;}
+  .board-toolbar{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:14px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    background:var(--bg-raised);
+  }
+  .toolbar-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px 16px;
+    padding:10px 12px;
+  }
+  .toolbar-row + .toolbar-row{ border-top:1px solid var(--line); }
+  .toolbar-row-label{
+    font-size:.66rem;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:var(--ink-faint);
+    font-weight:800;
+    flex:none;
+    width:78px;
+  }
+  .field{display:flex; flex-direction:column; gap:3px;}
+  .field label{
+    font-size:.66rem;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--ink-faint);
+    font-weight:700;
+  }
+  select{
+    background:var(--bg-raised);
+    border:1px solid var(--line-strong);
+    color:var(--ink);
+    padding:6px 8px;
+    border-radius:var(--radius-sm);
+    font-size:.82rem;
+    font-weight:600;
+  }
+  .seg{
+    display:inline-flex;
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+  }
+  .seg button{
+    appearance:none;
+    border:none;
+    background:var(--bg-raised);
+    color:var(--ink-dim);
+    padding:7px 12px;
+    font-size:.78rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .seg button + button{border-left:1px solid var(--line-strong);}
+  .seg button.active{background:var(--accent); color:var(--accent-ink);}
+
+  .toggle-row{display:flex; align-items:center; gap:8px;}
+  .toggle-row input[type=checkbox]{accent-color:var(--team-b); width:15px; height:15px;}
+  .toggle-row label{font-size:.78rem; color:var(--ink-dim); font-weight:600;}
+
+  .draw-colors{display:none; align-items:center; gap:6px;}
+  .draw-colors.show{display:flex;}
+  .swatch{
+    width:24px; height:24px; border-radius:50%;
+    border:2px solid transparent;
+    cursor:pointer;
+    padding:0;
+  }
+  .swatch.mini{width:18px; height:18px;}
+  .swatch[data-c="accent"]{background:var(--accent);}
+  .swatch[data-c="team-b"]{background:var(--team-b);}
+  .swatch[data-c="danger"]{background:var(--danger);}
+  .swatch.active{border-color:var(--ink);}
+  .swatch-row{display:flex; gap:5px; flex-wrap:wrap; max-width:170px;}
+
+  .toolbar-spacer{flex:1;}
+
+  /* ---------- Pitch ---------- */
+  .pitch-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 106 / 68;
+    max-height:min(86vh,1150px);
+    margin:0 auto;
+    border-radius:8px;
+    overflow:hidden;
+    background: repeating-linear-gradient(180deg, var(--pitch-a) 0 12.5%, var(--pitch-b) 12.5% 25%);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    touch-action:none;
+  }
+  .pitch-wrap svg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .markings{ pointer-events:none; }
+  .markings path, .markings rect, .markings circle, .markings line{
+    fill:none;
+    stroke:var(--pitch-line);
+    stroke-width:.5;
+    vector-effect:non-scaling-stroke;
+  }
+  .markings .dot{fill:var(--pitch-line); stroke:none;}
+
+  .zones-layer{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+  .zones-layer .zone{ pointer-events:auto; }
+  .zones-layer.mode-draw .zone{ pointer-events:none; }
+
+  .zone{
+    position:absolute;
+    border:2px solid var(--accent);
+    border-radius:4px;
+    box-sizing:border-box;
+    cursor:grab;
+    touch-action:none;
+  }
+  .zone.circle{ border-radius:50%; }
+  .zone:active{ cursor:grabbing; }
+  .zone.selected{ box-shadow:0 0 0 2px rgba(238,240,230,.5); }
+  .zone-remove{
+    display:none;
+    position:absolute; top:-9px; right:-9px;
+    width:19px; height:19px; border-radius:50%;
+    background:var(--danger); color:#fff;
+    align-items:center; justify-content:center;
+    font-size:.68rem; font-weight:800; line-height:1;
+    cursor:pointer;
+    border:2px solid var(--bg-panel);
+  }
+  .zone-handle{
+    display:none;
+    position:absolute; right:-6px; bottom:-6px;
+    width:13px; height:13px; border-radius:3px;
+    background:var(--ink); border:2px solid var(--bg-panel);
+    cursor:nwse-resize;
+  }
+  .zone.selected .zone-remove{ display:flex; }
+  .zone.selected .zone-handle{ display:block; }
+
+  .drawings-svg{ z-index:2; pointer-events:none; }
+  .drawings-svg.mode-draw{ pointer-events:auto; }
+  .drawings-svg polyline.stroke{
+    fill:none;
+    stroke-width:.6;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:.92;
+  }
+
+  .opp-layer{ position:absolute; inset:0; z-index:3; pointer-events:none; }
+  .opp-layer .token{ pointer-events:auto; }
+  .opp-layer.mode-draw .token{ pointer-events:none; }
+
+  .tokens-layer{ position:absolute; inset:0; z-index:4; pointer-events:none; }
+  .tokens-layer .token{ pointer-events:auto; }
+  .tokens-layer.mode-draw .token{ pointer-events:none; }
+
+  .token{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    cursor:grab;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .token:active{cursor:grabbing;}
+  .token .badge{
+    width:34px; height:34px;
+    border-radius:50%;
+    background:var(--token-a);
+    color:var(--accent-ink);
+    border:2px solid #fff4de;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:.86rem;
+    font-variant-numeric:tabular-nums;
+    box-shadow:0 3px 8px rgba(0,0,0,.4);
+  }
+  .token .label{
+    font-size:.66rem;
+    font-weight:700;
+    color:var(--ink);
+    background:rgba(16,31,22,.72);
+    padding:1px 6px;
+    border-radius:999px;
+    white-space:nowrap;
+    letter-spacing:.02em;
+  }
+  .token.gk .badge{background:var(--ink); color:var(--bg);}
+
+  .token.opp .badge{background:var(--token-b); border-color:#eaf3fb;}
+  .token.opp.gk .badge{background:var(--ink); color:var(--bg);}
+
+  .pitch-hint{
+    margin-top:8px;
+    font-size:.74rem;
+    color:var(--ink-faint);
+    text-align:center;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{display:flex; flex-direction:column; gap:16px;}
+
+  .roster-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 4px;
+    border-radius:6px;
+  }
+  .roster-row + .roster-row{border-top:1px solid var(--line);}
+  .roster-row .num{
+    width:32px; flex:none;
+    background:var(--bg-raised);
+    border:1px solid var(--line-strong);
+    color:var(--accent);
+    font-family:var(--font-mono);
+    font-weight:700;
+    text-align:center;
+    border-radius:5px;
+    padding:5px 2px;
+    font-size:.82rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .roster-row .name{
+    flex:1; min-width:0;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid transparent;
+    color:var(--ink);
+    padding:5px 4px;
+    font-size:.86rem;
+    font-weight:600;
+  }
+  .roster-row .name:hover, .roster-row .name:focus{border-bottom-color:var(--line-strong);}
+  .roster-row .role{
+    flex:none;
+    font-family:var(--font-mono);
+    font-size:.66rem;
+    color:var(--ink-faint);
+    width:34px;
+    text-align:center;
+  }
+  .roster-row.selected{background:rgba(226,166,59,.14); outline:1px solid var(--accent);}
+
+  .bench-row .sub-btn{flex:none;}
+
+  .add-bench{
+    margin-top:10px;
+    width:100%;
+    justify-content:center;
+    display:flex;
+  }
+
+  textarea.notes{
+    width:100%;
+    min-height:110px;
+    background:var(--bg-raised);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    color:var(--ink);
+    padding:10px;
+    font-size:.86rem;
+    line-height:1.6;
+    resize:vertical;
+  }
+  textarea.notes::placeholder{color:var(--ink-faint);}
+
+  .save-row{display:flex; gap:8px; margin-bottom:10px;}
+  .save-row input{
+    flex:1; min-width:0;
+    background:var(--bg-raised);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    color:var(--ink);
+    padding:8px 10px;
+    font-size:.82rem;
+  }
+  .slot-list{display:flex; flex-direction:column; gap:6px;}
+  .slot-row{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 8px;
+  }
+  .slot-row .slot-name{flex:1; min-width:0; font-size:.82rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .slot-empty{color:var(--ink-faint); font-size:.8rem; padding:4px 2px;}
+
+  .hint-small{font-size:.7rem; color:var(--ink-faint); margin-top:8px;}
+
+  .toast{
+    position:fixed;
+    bottom:20px; right:20px;
+    background:var(--accent);
+    color:var(--accent-ink);
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:.82rem;
+    font-weight:700;
+    box-shadow:var(--shadow);
+    opacity:0;
+    transform:translateY(8px);
+    pointer-events:none;
+    z-index:50;
+  }
+  .toast.show{
+    opacity:1; transform:translateY(0);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .toast{transition:opacity .2s ease, transform .2s ease;}
+  }
+
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff; color:#000;}
+    .app{max-width:none; padding:0;}
+    .panel{box-shadow:none; border-color:#ccc;}
+    .pitch-wrap{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .workspace{grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="app">
+
+  <header class="masthead">
+    <div class="masthead-left">
+      <div class="eyebrow">Match Plan · Tactics Board</div>
+      <input class="team-name" id="teamName" value="My Team" maxlength="28" aria-label="Team name">
+      <div class="matchday-meta">
+        <span class="vs">VS</span>
+        <input id="oppName" placeholder="Opponent name" maxlength="24">
+        <span>·</span>
+        <input id="matchDate" placeholder="Match date">
+        <span>·</span>
+        <input id="venue" placeholder="Venue" maxlength="24">
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <section class="panel board-panel">
+      <div class="board-toolbar no-print">
+        <div class="toolbar-row">
+          <span class="toolbar-row-label">Setup</span>
+          <div class="field">
+            <label for="formationSel">Our Formation</label>
+            <select id="formationSel"></select>
+          </div>
+          <div class="field">
+            <label>Mode</label>
+            <div class="seg">
+              <button type="button" id="modeMoveBtn" class="active">Move</button>
+              <button type="button" id="modeDrawBtn">Draw</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Pitch</label>
+            <div class="seg">
+              <button type="button" id="orientLandscapeBtn" class="active">Landscape</button>
+              <button type="button" id="orientPortraitBtn">Portrait</button>
+            </div>
+          </div>
+          <div class="toolbar-spacer"></div>
+          <button class="btn tiny" id="resetPosBtn">Reset Our Positions</button>
+        </div>
+
+        <div class="toolbar-row">
+          <span class="toolbar-row-label">Draw &amp; Mark</span>
+          <div class="field draw-colors" id="drawColors">
+            <label style="visibility:hidden">Colour</label>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="swatch active" data-c="accent" title="Attack"></button>
+              <button type="button" class="swatch" data-c="team-b" title="Press / Mark"></button>
+              <button type="button" class="swatch" data-c="danger" title="Danger / Risk"></button>
+            </div>
+          </div>
+          <button class="btn tiny" id="clearDrawBtn">Clear Lines</button>
+          <div class="field">
+            <label>Zone Colour</label>
+            <div class="swatch-row" id="zoneColorSwatches"></div>
+          </div>
+          <button class="btn tiny" id="addRectBtn">+ Rectangle</button>
+          <button class="btn tiny" id="addCircleBtn">+ Circle</button>
+          <button class="btn tiny" id="clearZonesBtn">Clear Zones</button>
+        </div>
+
+        <div class="toolbar-row">
+          <span class="toolbar-row-label">Opponent</span>
+          <div class="toggle-row">
+            <input type="checkbox" id="oppToggle">
+            <label for="oppToggle">Show Opponent</label>
+          </div>
+          <div class="field" id="oppFormationField" style="display:none;">
+            <label for="oppFormationSel">Opponent Formation</label>
+            <select id="oppFormationSel"></select>
+          </div>
+          <button class="btn tiny" id="resetOppPosBtn" style="display:none;">Reset Opponent</button>
+          <div class="toolbar-spacer"></div>
+          <div class="field">
+            <label>Home Colour</label>
+            <div class="swatch-row" id="teamAColorSwatches"></div>
+          </div>
+          <div class="field" id="teamBColorField" style="display:none;">
+            <label>Away Colour</label>
+            <div class="swatch-row" id="teamBColorSwatches"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pitch-wrap" id="pitchWrap">
+        <svg class="markings" id="markingsPortrait" viewBox="0 0 68 106" preserveAspectRatio="xMidYMid meet" aria-hidden="true" style="display:none;">
+          <rect x="1" y="1" width="66" height="104"></rect>
+          <line x1="1" y1="53" x2="67" y2="53"></line>
+          <circle cx="34" cy="53" r="9.15"></circle>
+          <circle class="dot" cx="34" cy="53" r="0.35"></circle>
+          <rect x="13.85" y="1" width="40.3" height="16.5"></rect>
+          <rect x="24.85" y="1" width="18.3" height="5.5"></rect>
+          <circle class="dot" cx="34" cy="12.5" r="0.35"></circle>
+          <path d="M 26.5 17.5 A 9.15 9.15 0 0 0 41.5 17.5"></path>
+          <rect x="13.85" y="88.5" width="40.3" height="16.5"></rect>
+          <rect x="24.85" y="99.5" width="18.3" height="5.5"></rect>
+          <circle class="dot" cx="34" cy="93.5" r="0.35"></circle>
+          <path d="M 26.5 88.5 A 9.15 9.15 0 0 1 41.5 88.5"></path>
+          <path d="M 1 1 A 1.5 1.5 0 0 0 2.5 2.5"></path>
+          <path d="M 67 1 A 1.5 1.5 0 0 1 65.5 2.5"></path>
+          <path d="M 1 105 A 1.5 1.5 0 0 1 2.5 103.5"></path>
+          <path d="M 67 105 A 1.5 1.5 0 0 0 65.5 103.5"></path>
+        </svg>
+
+        <svg class="markings" id="markingsLandscape" viewBox="0 0 106 68" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <rect x="1" y="1" width="104" height="66"></rect>
+          <line x1="53" y1="1" x2="53" y2="67"></line>
+          <circle cx="53" cy="34" r="9.15"></circle>
+          <circle class="dot" cx="53" cy="34" r="0.35"></circle>
+          <rect x="1" y="13.85" width="16.5" height="40.3"></rect>
+          <rect x="1" y="24.85" width="5.5" height="18.3"></rect>
+          <circle class="dot" cx="12.5" cy="34" r="0.35"></circle>
+          <path d="M 17.5 26.5 A 9.15 9.15 0 0 1 17.5 41.5"></path>
+          <rect x="88.5" y="13.85" width="16.5" height="40.3"></rect>
+          <rect x="99.5" y="24.85" width="5.5" height="18.3"></rect>
+          <circle class="dot" cx="93.5" cy="34" r="0.35"></circle>
+          <path d="M 88.5 26.5 A 9.15 9.15 0 0 0 88.5 41.5"></path>
+          <path d="M 1 1 A 1.5 1.5 0 0 1 2.5 2.5"></path>
+          <path d="M 1 67 A 1.5 1.5 0 0 0 2.5 65.5"></path>
+          <path d="M 105 1 A 1.5 1.5 0 0 0 103.5 2.5"></path>
+          <path d="M 105 67 A 1.5 1.5 0 0 1 103.5 65.5"></path>
+        </svg>
+
+        <div class="zones-layer" id="zonesLayer"></div>
+
+        <svg class="drawings-svg" viewBox="0 0 106 68" preserveAspectRatio="xMidYMid meet" id="drawSvg" aria-hidden="true">
+          <g id="drawGroup"></g>
+        </svg>
+
+        <div class="opp-layer" id="oppLayer"></div>
+        <div class="tokens-layer" id="tokensLayer"></div>
+      </div>
+      <div class="pitch-hint no-print">Drag players to position them. Switch to "Draw" to sketch tactic arrows, or add a zone to mark an area.</div>
+    </section>
+
+    <aside class="sidebar">
+
+      <div class="panel">
+        <h2 class="section-title">Starting XI <span class="count">XI</span></h2>
+        <div id="starterList"></div>
+      </div>
+
+      <div class="panel">
+        <h2 class="section-title">Bench <span class="count" id="benchCount">0</span></h2>
+        <div id="benchList"></div>
+        <div class="add-bench no-print">
+          <button class="btn tiny" id="addBenchBtn">+ Add Substitute</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="section-title">Tactics Notes</h2>
+        <textarea class="notes" id="notes" placeholder="e.g. High press from the opponent's third / switch to 4-2-3-1 for the last 20 minutes..."></textarea>
+      </div>
+
+      <div class="panel no-print">
+        <h2 class="section-title">Saved Plans</h2>
+        <div class="save-row">
+          <input id="slotNameInput" placeholder="Name this plan, e.g. Home game" maxlength="30">
+          <button class="btn primary tiny" id="saveSlotBtn">Save</button>
+        </div>
+        <div class="slot-list" id="slotList"></div>
+        <div class="hint-small">Saved in this browser only.</div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var FORMATIONS = {
+    "442": { label:"4-4-2", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"LM",x:18,y:50},{role:"CM",x:38,y:52},{role:"CM",x:62,y:52},{role:"RM",x:82,y:50},
+      {role:"ST",x:40,y:22},{role:"ST",x:60,y:22}
+    ]},
+    "433": { label:"4-3-3", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"CM",x:30,y:55},{role:"CM",x:50,y:58},{role:"CM",x:70,y:55},
+      {role:"LW",x:20,y:25},{role:"ST",x:50,y:18},{role:"RW",x:80,y:25}
+    ]},
+    "4231": { label:"4-2-3-1", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"DM",x:38,y:58},{role:"DM",x:62,y:58},
+      {role:"LAM",x:20,y:38},{role:"CAM",x:50,y:35},{role:"RAM",x:80,y:38},
+      {role:"ST",x:50,y:18}
+    ]},
+    "4141": { label:"4-1-4-1", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"DM",x:50,y:60},
+      {role:"LM",x:18,y:42},{role:"CM",x:38,y:44},{role:"CM",x:62,y:44},{role:"RM",x:82,y:42},
+      {role:"ST",x:50,y:20}
+    ]},
+    "4411": { label:"4-4-1-1", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"LM",x:18,y:50},{role:"CM",x:38,y:52},{role:"CM",x:62,y:52},{role:"RM",x:82,y:50},
+      {role:"SS",x:50,y:35},{role:"ST",x:50,y:18}
+    ]},
+    "4312": { label:"4-3-1-2", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"CM",x:30,y:55},{role:"CM",x:50,y:58},{role:"CM",x:70,y:55},
+      {role:"CAM",x:50,y:38},
+      {role:"ST",x:40,y:20},{role:"ST",x:60,y:20}
+    ]},
+    "41212": { label:"4-1-2-1-2", group:"4 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
+      {role:"DM",x:50,y:62},
+      {role:"CM",x:35,y:48},{role:"CM",x:65,y:48},
+      {role:"CAM",x:50,y:35},
+      {role:"ST",x:40,y:20},{role:"ST",x:60,y:20}
+    ]},
+    "352": { label:"3-5-2", group:"3 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"CB",x:30,y:78},{role:"CB",x:50,y:80},{role:"CB",x:70,y:78},
+      {role:"LWB",x:12,y:50},{role:"CM",x:35,y:52},{role:"CM",x:50,y:55},{role:"CM",x:65,y:52},{role:"RWB",x:88,y:50},
+      {role:"ST",x:40,y:22},{role:"ST",x:60,y:22}
+    ]},
+    "343": { label:"3-4-3", group:"3 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"CB",x:30,y:78},{role:"CB",x:50,y:80},{role:"CB",x:70,y:78},
+      {role:"LM",x:15,y:52},{role:"CM",x:38,y:55},{role:"CM",x:62,y:55},{role:"RM",x:85,y:52},
+      {role:"LW",x:20,y:25},{role:"ST",x:50,y:18},{role:"RW",x:80,y:25}
+    ]},
+    "3412": { label:"3-4-1-2", group:"3 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"CB",x:30,y:78},{role:"CB",x:50,y:80},{role:"CB",x:70,y:78},
+      {role:"LM",x:15,y:52},{role:"CM",x:38,y:55},{role:"CM",x:62,y:55},{role:"RM",x:85,y:52},
+      {role:"CAM",x:50,y:35},
+      {role:"ST",x:40,y:20},{role:"ST",x:60,y:20}
+    ]},
+    "532": { label:"5-3-2", group:"5 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LWB",x:10,y:68},{role:"CB",x:30,y:78},{role:"CB",x:50,y:80},{role:"CB",x:70,y:78},{role:"RWB",x:90,y:68},
+      {role:"CM",x:32,y:50},{role:"CM",x:50,y:52},{role:"CM",x:68,y:50},
+      {role:"ST",x:40,y:22},{role:"ST",x:60,y:22}
+    ]},
+    "541": { label:"5-4-1", group:"5 at the back", pos:[
+      {role:"GK",x:50,y:93},{role:"LWB",x:10,y:68},{role:"CB",x:30,y:78},{role:"CB",x:50,y:80},{role:"CB",x:70,y:78},{role:"RWB",x:90,y:68},
+      {role:"LM",x:18,y:50},{role:"CM",x:38,y:53},{role:"CM",x:62,y:53},{role:"RM",x:82,y:50},
+      {role:"ST",x:50,y:20}
+    ]}
+  };
+  var FORMATION_KEYS = ["442","433","4231","4141","4411","4312","41212","352","343","3412","532","541"];
+
+  // Landscape pitch: length runs left-to-right, so swap each portrait
+  // coordinate's axes (own goal moves from bottom to the left edge).
+  var FORMATIONS_LANDSCAPE = {};
+  Object.keys(FORMATIONS).forEach(function(k){
+    FORMATIONS_LANDSCAPE[k] = {
+      label: FORMATIONS[k].label,
+      group: FORMATIONS[k].group,
+      pos: FORMATIONS[k].pos.map(function(p){ return { role:p.role, x:100-p.y, y:p.x }; })
+    };
+  });
+  function activeFormations(orientation){
+    return orientation === "landscape" ? FORMATIONS_LANDSCAPE : FORMATIONS;
+  }
+  function pitchDims(orientation){
+    return orientation === "landscape" ? {w:106,h:68} : {w:68,h:106};
+  }
+  function mirrorForOpponent(p, orientation){
+    return orientation === "landscape" ? {x:100-p.x, y:100-p.y} : {x:p.x, y:100-p.y};
+  }
+
+  var PALETTE = ["#e2a63b","#5b8ac0","#d1495b","#4caf6e","#9b6bce","#e0793c","#4fb8c4","#d16b9e"];
+
+  function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function hexToRgba(hex,a){
+    var h = hex.replace("#","");
+    var r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    return "rgba("+r+","+g+","+b+","+a+")";
+  }
+
+  function buildStarters(formationKey, orientation){
+    var preset = activeFormations(orientation)[formationKey].pos;
+    return preset.map(function(p,i){
+      return { id:uid(), num:i+1, name:p.role, role:p.role, x:p.x, y:p.y, nameEdited:false };
+    });
+  }
+
+  function buildOpponent(formationKey, orientation){
+    var preset = activeFormations(orientation)[formationKey].pos;
+    return preset.map(function(p,i){
+      var m = mirrorForOpponent(p, orientation);
+      return { role:p.role, num:i+1, x:m.x, y:m.y };
+    });
+  }
+
+  var state = {
+    orientation:"landscape",
+    formation:"442",
+    players: buildStarters("442","landscape"),
+    bench: [
+      {id:uid(), num:12, name:"Sub"},
+      {id:uid(), num:13, name:"Sub"},
+      {id:uid(), num:14, name:"Sub"}
+    ],
+    showOpponent:false,
+    oppFormation:"442",
+    oppPlayers: buildOpponent("442","landscape"),
+    zones: [],
+    selectedZoneId: null,
+    zoneColor: PALETTE[0],
+    tokenColorA: PALETTE[0],
+    tokenColorB: PALETTE[1],
+    notes:"",
+    drawings:[],
+    mode:"move",
+    drawColor:"accent",
+    pendingSubId:null
+  };
+
+  var els = {
+    formationSel: document.getElementById("formationSel"),
+    oppFormationSel: document.getElementById("oppFormationSel"),
+    oppFormationField: document.getElementById("oppFormationField"),
+    oppToggle: document.getElementById("oppToggle"),
+    tokensLayer: document.getElementById("tokensLayer"),
+    oppLayer: document.getElementById("oppLayer"),
+    zonesLayer: document.getElementById("zonesLayer"),
+    pitchWrap: document.getElementById("pitchWrap"),
+    markingsPortrait: document.getElementById("markingsPortrait"),
+    markingsLandscape: document.getElementById("markingsLandscape"),
+    orientLandscapeBtn: document.getElementById("orientLandscapeBtn"),
+    orientPortraitBtn: document.getElementById("orientPortraitBtn"),
+    drawSvg: document.getElementById("drawSvg"),
+    drawGroup: document.getElementById("drawGroup"),
+    starterList: document.getElementById("starterList"),
+    benchList: document.getElementById("benchList"),
+    benchCount: document.getElementById("benchCount"),
+    addBenchBtn: document.getElementById("addBenchBtn"),
+    notes: document.getElementById("notes"),
+    modeMoveBtn: document.getElementById("modeMoveBtn"),
+    modeDrawBtn: document.getElementById("modeDrawBtn"),
+    drawColors: document.getElementById("drawColors"),
+    clearDrawBtn: document.getElementById("clearDrawBtn"),
+    resetPosBtn: document.getElementById("resetPosBtn"),
+    resetOppPosBtn: document.getElementById("resetOppPosBtn"),
+    zoneColorSwatches: document.getElementById("zoneColorSwatches"),
+    addRectBtn: document.getElementById("addRectBtn"),
+    addCircleBtn: document.getElementById("addCircleBtn"),
+    clearZonesBtn: document.getElementById("clearZonesBtn"),
+    teamAColorSwatches: document.getElementById("teamAColorSwatches"),
+    teamBColorSwatches: document.getElementById("teamBColorSwatches"),
+    teamBColorField: document.getElementById("teamBColorField"),
+    slotNameInput: document.getElementById("slotNameInput"),
+    saveSlotBtn: document.getElementById("saveSlotBtn"),
+    slotList: document.getElementById("slotList"),
+    toast: document.getElementById("toast"),
+    teamName: document.getElementById("teamName"),
+    oppName: document.getElementById("oppName"),
+    matchDate: document.getElementById("matchDate"),
+    venue: document.getElementById("venue")
+  };
+
+  var toastTimer = null;
+  function showToast(msg){
+    els.toast.textContent = msg;
+    els.toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ els.toast.classList.remove("show"); }, 1800);
+  }
+
+  // ---------- populate formation selects (grouped by defensive line) ----------
+  function fillFormationSelect(selectEl){
+    var groups = {};
+    var order = [];
+    FORMATION_KEYS.forEach(function(k){
+      var g = FORMATIONS[k].group;
+      if(!groups[g]){ groups[g] = []; order.push(g); }
+      groups[g].push(k);
+    });
+    order.forEach(function(g){
+      var og = document.createElement("optgroup");
+      og.label = g;
+      groups[g].forEach(function(k){
+        var o = document.createElement("option");
+        o.value = k; o.textContent = FORMATIONS[k].label;
+        og.appendChild(o);
+      });
+      selectEl.appendChild(og);
+    });
+  }
+  fillFormationSelect(els.formationSel);
+  fillFormationSelect(els.oppFormationSel);
+  els.formationSel.value = state.formation;
+  els.oppFormationSel.value = state.oppFormation;
+
+  // ---------- colour swatch pickers ----------
+  function buildPaletteSwatches(container, getActive, onPick){
+    container.innerHTML = "";
+    PALETTE.forEach(function(hex){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "swatch mini" + (getActive() === hex ? " active" : "");
+      b.style.background = hex;
+      b.addEventListener("click", function(){
+        onPick(hex);
+        Array.prototype.forEach.call(container.querySelectorAll(".swatch"), function(s){ s.classList.remove("active"); });
+        b.classList.add("active");
+      });
+      container.appendChild(b);
+    });
+  }
+  function refreshColorSwatches(){
+    buildPaletteSwatches(els.zoneColorSwatches, function(){ return state.zoneColor; }, function(hex){ state.zoneColor = hex; });
+    buildPaletteSwatches(els.teamAColorSwatches, function(){ return state.tokenColorA; }, function(hex){
+      state.tokenColorA = hex;
+      document.documentElement.style.setProperty("--token-a", hex);
+    });
+    buildPaletteSwatches(els.teamBColorSwatches, function(){ return state.tokenColorB; }, function(hex){
+      state.tokenColorB = hex;
+      document.documentElement.style.setProperty("--token-b", hex);
+    });
+  }
+  refreshColorSwatches();
+  document.documentElement.style.setProperty("--token-a", state.tokenColorA);
+  document.documentElement.style.setProperty("--token-b", state.tokenColorB);
+
+  // ---------- shared drag helpers ----------
+  function pointToPercent(e, container){
+    var r = container.getBoundingClientRect();
+    var x = ((e.clientX - r.left) / r.width) * 100;
+    var y = ((e.clientY - r.top) / r.height) * 100;
+    return { x: clamp(x,0,100), y: clamp(y,0,100) };
+  }
+  function pointToPitchUnits(e, container){
+    var p = pointToPercent(e, container);
+    var dims = pitchDims(state.orientation);
+    return { x: p.x/100*dims.w, y: p.y/100*dims.h };
+  }
+
+  // ---------- pitch orientation ----------
+  function syncOrientationVisuals(){
+    var landscape = state.orientation === "landscape";
+    els.markingsPortrait.style.display = landscape ? "none" : "block";
+    els.markingsLandscape.style.display = landscape ? "block" : "none";
+    var dims = pitchDims(state.orientation);
+    els.pitchWrap.style.aspectRatio = dims.w + " / " + dims.h;
+    els.drawSvg.setAttribute("viewBox", "0 0 " + dims.w + " " + dims.h);
+    els.orientLandscapeBtn.classList.toggle("active", landscape);
+    els.orientPortraitBtn.classList.toggle("active", !landscape);
+  }
+  function setOrientation(o){
+    state.orientation = o;
+    syncOrientationVisuals();
+    applyFormation(state.formation);
+    state.oppPlayers = buildOpponent(state.oppFormation, state.orientation);
+    renderOpponent();
+    showToast(o === "landscape" ? "Landscape pitch" : "Portrait pitch");
+  }
+
+  function makeTokenDraggable(el, playerObj){
+    el.addEventListener("pointerdown", function(e){
+      if(state.mode !== "move") return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      function onMove(ev){
+        var p = pointToPercent(ev, els.pitchWrap);
+        playerObj.x = clamp(p.x,3,97);
+        playerObj.y = clamp(p.y,3,97);
+        el.style.left = playerObj.x + "%";
+        el.style.top = playerObj.y + "%";
+      }
+      function onUp(ev){
+        el.releasePointerCapture(ev.pointerId);
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerup", onUp);
+      }
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerup", onUp);
+    });
+  }
+
+  function renderTokens(){
+    els.tokensLayer.innerHTML = "";
+    state.players.forEach(function(p){
+      var t = document.createElement("div");
+      t.className = "token" + (p.role === "GK" ? " gk" : "");
+      t.style.left = p.x + "%";
+      t.style.top = p.y + "%";
+      t.innerHTML =
+        '<div class="badge">' + p.num + '</div>' +
+        '<div class="label">' + escapeHtml(p.name) + '</div>';
+      els.tokensLayer.appendChild(t);
+      makeTokenDraggable(t, p);
+    });
+  }
+
+  function renderOpponent(){
+    els.oppLayer.innerHTML = "";
+    els.oppLayer.style.display = state.showOpponent ? "block" : "none";
+    if(!state.showOpponent) return;
+    state.oppPlayers.forEach(function(p){
+      var t = document.createElement("div");
+      t.className = "token opp" + (p.role === "GK" ? " gk" : "");
+      t.style.left = p.x + "%";
+      t.style.top = p.y + "%";
+      t.innerHTML =
+        '<div class="badge">' + p.num + '</div>' +
+        '<div class="label">' + escapeHtml(p.role) + '</div>';
+      els.oppLayer.appendChild(t);
+      makeTokenDraggable(t, p);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  // ---------- zones (translucent rectangle / circle markers) ----------
+  function renderZones(){
+    els.zonesLayer.innerHTML = "";
+    state.zones.forEach(function(z){ els.zonesLayer.appendChild(buildZoneEl(z)); });
+  }
+
+  function buildZoneEl(z){
+    var el = document.createElement("div");
+    el.className = "zone" + (z.type === "circle" ? " circle" : "") + (state.selectedZoneId === z.id ? " selected" : "");
+    el.style.left = (z.x - z.w/2) + "%";
+    el.style.top = (z.y - z.h/2) + "%";
+    el.style.width = z.w + "%";
+    el.style.height = z.h + "%";
+    el.style.borderColor = z.color;
+    el.style.background = hexToRgba(z.color, 0.28);
+
+    var remove = document.createElement("div");
+    remove.className = "zone-remove no-print";
+    remove.textContent = "×";
+    remove.addEventListener("pointerdown", function(e){ e.stopPropagation(); });
+    remove.addEventListener("click", function(e){
+      e.stopPropagation();
+      state.zones = state.zones.filter(function(x){ return x.id !== z.id; });
+      if(state.selectedZoneId === z.id) state.selectedZoneId = null;
+      renderZones();
+    });
+
+    var handle = document.createElement("div");
+    handle.className = "zone-handle no-print";
+    handle.addEventListener("pointerdown", function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      var startX = e.clientX, startY = e.clientY;
+      var startW = z.w, startH = z.h;
+      function onMove(ev){
+        var r = els.pitchWrap.getBoundingClientRect();
+        var dxPct = (ev.clientX - startX) / r.width * 100;
+        var dyPct = (ev.clientY - startY) / r.height * 100;
+        if(z.type === "circle"){
+          var pd = pitchDims(state.orientation);
+          z.w = clamp(startW + dxPct, 6, 92);
+          z.h = z.w * (pd.w / pd.h);
+        } else {
+          z.w = clamp(startW + dxPct, 6, 92);
+          z.h = clamp(startH + dyPct, 6, 92);
+        }
+        el.style.left = (z.x - z.w/2) + "%";
+        el.style.top = (z.y - z.h/2) + "%";
+        el.style.width = z.w + "%";
+        el.style.height = z.h + "%";
+      }
+      function onUp(ev){
+        handle.releasePointerCapture(ev.pointerId);
+        handle.removeEventListener("pointermove", onMove);
+        handle.removeEventListener("pointerup", onUp);
+      }
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp);
+    });
+
+    el.appendChild(remove);
+    el.appendChild(handle);
+
+    el.addEventListener("pointerdown", function(e){
+      if(state.mode !== "move") return;
+      if(e.target === remove || e.target === handle) return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      var start = pointToPercent(e, els.pitchWrap);
+      var offX = start.x - z.x, offY = start.y - z.y;
+      var moved = false;
+      function onMove(ev){
+        var p = pointToPercent(ev, els.pitchWrap);
+        if(Math.abs(p.x - start.x) + Math.abs(p.y - start.y) > 0.6) moved = true;
+        z.x = clamp(p.x - offX, 0, 100);
+        z.y = clamp(p.y - offY, 0, 100);
+        el.style.left = (z.x - z.w/2) + "%";
+        el.style.top = (z.y - z.h/2) + "%";
+      }
+      function onUp(ev){
+        el.releasePointerCapture(ev.pointerId);
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerup", onUp);
+        if(!moved && state.selectedZoneId !== z.id){
+          state.selectedZoneId = z.id;
+          renderZones();
+        }
+      }
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerup", onUp);
+    });
+
+    return el;
+  }
+
+  els.addRectBtn.addEventListener("click", function(){
+    setMode("move");
+    var z = { id:uid(), type:"rect", x:50, y:50, w:28, h:20, color:state.zoneColor };
+    state.zones.push(z);
+    state.selectedZoneId = z.id;
+    renderZones();
+  });
+  els.addCircleBtn.addEventListener("click", function(){
+    setMode("move");
+    var w = 22;
+    var pd = pitchDims(state.orientation);
+    var z = { id:uid(), type:"circle", x:50, y:50, w:w, h:w*(pd.w/pd.h), color:state.zoneColor };
+    state.zones.push(z);
+    state.selectedZoneId = z.id;
+    renderZones();
+  });
+  els.clearZonesBtn.addEventListener("click", function(){
+    state.zones = [];
+    state.selectedZoneId = null;
+    renderZones();
+  });
+
+  els.pitchWrap.addEventListener("pointerdown", function(e){
+    if(!e.target.closest(".zone") && state.selectedZoneId !== null){
+      state.selectedZoneId = null;
+      renderZones();
+    }
+  });
+
+  // ---------- squad panels ----------
+  function renderStarterList(){
+    els.starterList.innerHTML = "";
+    state.players.forEach(function(p){
+      var row = document.createElement("div");
+      row.className = "roster-row starter-row";
+      row.dataset.id = p.id;
+      row.innerHTML =
+        '<input class="num" value="' + p.num + '" inputmode="numeric" maxlength="2">' +
+        '<input class="name" value="' + escapeHtml(p.name) + '" maxlength="16">' +
+        '<span class="role">' + p.role + '</span>';
+      var numInput = row.querySelector(".num");
+      var nameInput = row.querySelector(".name");
+      numInput.addEventListener("input", function(){
+        var v = parseInt(numInput.value,10);
+        p.num = isNaN(v) ? p.num : v;
+        renderTokens();
+      });
+      nameInput.addEventListener("input", function(){
+        p.name = nameInput.value || p.role;
+        p.nameEdited = true;
+        renderTokens();
+      });
+      row.addEventListener("click", function(e){
+        if(e.target === numInput || e.target === nameInput) return;
+        if(state.pendingSubId){ doSub(state.pendingSubId, p.id); }
+      });
+      if(state.pendingSubId) row.style.cursor = "pointer";
+      els.starterList.appendChild(row);
+    });
+  }
+
+  function renderBenchList(){
+    els.benchList.innerHTML = "";
+    els.benchCount.textContent = state.bench.length;
+    if(state.bench.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "slot-empty";
+      empty.textContent = "No substitutes yet.";
+      els.benchList.appendChild(empty);
+    }
+    state.bench.forEach(function(b){
+      var row = document.createElement("div");
+      row.className = "roster-row bench-row";
+      row.dataset.id = b.id;
+      if(state.pendingSubId === b.id) row.classList.add("selected");
+      row.innerHTML =
+        '<input class="num" value="' + b.num + '" inputmode="numeric" maxlength="2">' +
+        '<input class="name" value="' + escapeHtml(b.name) + '" maxlength="16">' +
+        '<button class="btn tiny sub-btn no-print" title="Bring on / select to substitute">⇄</button>' +
+        '<button class="btn tiny danger-outline no-print" title="Remove substitute">✕</button>';
+      var numInput = row.querySelector(".num");
+      var nameInput = row.querySelector(".name");
+      var subBtn = row.querySelector(".sub-btn");
+      var delBtn = row.querySelector(".danger-outline");
+      numInput.addEventListener("input", function(){
+        var v = parseInt(numInput.value,10);
+        b.num = isNaN(v) ? b.num : v;
+      });
+      nameInput.addEventListener("input", function(){ b.name = nameInput.value || "Sub"; });
+      subBtn.addEventListener("click", function(){
+        state.pendingSubId = (state.pendingSubId === b.id) ? null : b.id;
+        renderBenchList();
+        renderStarterList();
+        showToast(state.pendingSubId ? "Pick a starter to swap out" : "Substitution cancelled");
+      });
+      delBtn.addEventListener("click", function(){
+        state.bench = state.bench.filter(function(x){ return x.id !== b.id; });
+        if(state.pendingSubId === b.id) state.pendingSubId = null;
+        renderBenchList();
+      });
+      els.benchList.appendChild(row);
+    });
+  }
+
+  function doSub(benchId, starterId){
+    var b = state.bench.find(function(x){ return x.id === benchId; });
+    var p = state.players.find(function(x){ return x.id === starterId; });
+    if(!b || !p) return;
+    var tmpNum = p.num, tmpName = p.name;
+    p.num = b.num; p.name = b.name; p.nameEdited = true;
+    b.num = tmpNum; b.name = tmpName;
+    state.pendingSubId = null;
+    renderStarterList();
+    renderBenchList();
+    renderTokens();
+    showToast("Substituted: " + p.name);
+  }
+
+  els.addBenchBtn.addEventListener("click", function(){
+    var maxNum = state.players.concat(state.bench).reduce(function(m,x){ return Math.max(m,x.num); }, 0);
+    state.bench.push({ id:uid(), num:maxNum+1, name:"Sub" });
+    renderBenchList();
+  });
+
+  // ---------- formation change ----------
+  function applyFormation(key){
+    state.formation = key;
+    var preset = activeFormations(state.orientation)[key].pos;
+    state.players.forEach(function(p, i){
+      var slot = preset[i];
+      p.x = slot.x; p.y = slot.y; p.role = slot.role;
+      if(!p.nameEdited) p.name = slot.role;
+    });
+    renderTokens();
+    renderStarterList();
+  }
+  els.formationSel.addEventListener("change", function(){ applyFormation(els.formationSel.value); });
+
+  els.resetPosBtn.addEventListener("click", function(){
+    var preset = activeFormations(state.orientation)[state.formation].pos;
+    state.players.forEach(function(p,i){ p.x = preset[i].x; p.y = preset[i].y; });
+    renderTokens();
+    showToast("Positions reset");
+  });
+
+  els.oppToggle.addEventListener("change", function(){
+    state.showOpponent = els.oppToggle.checked;
+    els.oppFormationField.style.display = state.showOpponent ? "flex" : "none";
+    els.resetOppPosBtn.style.display = state.showOpponent ? "inline-block" : "none";
+    els.teamBColorField.style.display = state.showOpponent ? "flex" : "none";
+    renderOpponent();
+  });
+  els.oppFormationSel.addEventListener("change", function(){
+    state.oppFormation = els.oppFormationSel.value;
+    state.oppPlayers = buildOpponent(state.oppFormation, state.orientation);
+    renderOpponent();
+  });
+  els.resetOppPosBtn.addEventListener("click", function(){
+    var preset = activeFormations(state.orientation)[state.oppFormation].pos;
+    state.oppPlayers.forEach(function(p,i){
+      var m = mirrorForOpponent(preset[i], state.orientation);
+      p.x = m.x; p.y = m.y;
+    });
+    renderOpponent();
+    showToast("Opponent positions reset");
+  });
+
+  els.orientLandscapeBtn.addEventListener("click", function(){ setOrientation("landscape"); });
+  els.orientPortraitBtn.addEventListener("click", function(){ setOrientation("portrait"); });
+
+  // ---------- mode + drawing ----------
+  function setMode(m){
+    state.mode = m;
+    els.modeMoveBtn.classList.toggle("active", m === "move");
+    els.modeDrawBtn.classList.toggle("active", m === "draw");
+    els.drawColors.classList.toggle("show", m === "draw");
+    els.tokensLayer.classList.toggle("mode-draw", m === "draw");
+    els.oppLayer.classList.toggle("mode-draw", m === "draw");
+    els.zonesLayer.classList.toggle("mode-draw", m === "draw");
+    els.drawSvg.classList.toggle("mode-draw", m === "draw");
+    if(m === "draw" && state.selectedZoneId !== null){
+      state.selectedZoneId = null;
+      renderZones();
+    }
+  }
+  els.modeMoveBtn.addEventListener("click", function(){ setMode("move"); });
+  els.modeDrawBtn.addEventListener("click", function(){ setMode("draw"); });
+
+  Array.prototype.forEach.call(els.drawColors.querySelectorAll(".swatch"), function(sw){
+    sw.addEventListener("click", function(){
+      state.drawColor = sw.dataset.c;
+      Array.prototype.forEach.call(els.drawColors.querySelectorAll(".swatch"), function(s2){ s2.classList.remove("active"); });
+      sw.classList.add("active");
+    });
+  });
+
+  var COLOR_VAR = { accent:"var(--accent)", "team-b":"var(--team-b)", danger:"var(--danger)" };
+  var MIN_SEG_DIST = 0.8;
+  var ARROW_SIZE = 2.0;
+
+  function renderDrawings(){
+    els.drawGroup.innerHTML = "";
+    state.drawings.forEach(function(d){
+      if(d.points.length < 2) return;
+      var last = d.points[d.points.length-1];
+      var prevIdx = Math.max(0, d.points.length-4);
+      var prev = d.points[prevIdx];
+      var ang = Math.atan2(last.y - prev.y, last.x - prev.x);
+
+      // Stop the line at the arrowhead's base so the stroke doesn't
+      // overlap the head (which caused a thick, blobby tip).
+      var baseX = last.x - ARROW_SIZE*0.9*Math.cos(ang);
+      var baseY = last.y - ARROW_SIZE*0.9*Math.sin(ang);
+      var linePts = d.points.slice(0,-1).concat([{x:baseX,y:baseY}]);
+      var pts = linePts.map(function(pt){ return pt.x + "," + pt.y; }).join(" ");
+      var poly = document.createElementNS("http://www.w3.org/2000/svg","polyline");
+      poly.setAttribute("points", pts);
+      poly.setAttribute("class","stroke");
+      poly.setAttribute("fill","none");
+      poly.setAttribute("stroke", COLOR_VAR[d.color] || COLOR_VAR.accent);
+      els.drawGroup.appendChild(poly);
+
+      var p1x = last.x - ARROW_SIZE*Math.cos(ang - 0.42), p1y = last.y - ARROW_SIZE*Math.sin(ang - 0.42);
+      var p2x = last.x - ARROW_SIZE*Math.cos(ang + 0.42), p2y = last.y - ARROW_SIZE*Math.sin(ang + 0.42);
+      var head = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+      head.setAttribute("points", last.x+","+last.y+" "+p1x+","+p1y+" "+p2x+","+p2y);
+      head.setAttribute("fill", COLOR_VAR[d.color] || COLOR_VAR.accent);
+      els.drawGroup.appendChild(head);
+    });
+  }
+
+  els.drawSvg.addEventListener("pointerdown", function(e){
+    if(state.mode !== "draw") return;
+    e.preventDefault();
+    els.drawSvg.setPointerCapture(e.pointerId);
+    var p0 = pointToPitchUnits(e, els.pitchWrap);
+    var current = { color: state.drawColor, points:[p0] };
+    state.drawings.push(current);
+    renderDrawings();
+    var last = p0;
+    function onMove(ev){
+      var p = pointToPitchUnits(ev, els.pitchWrap);
+      var dx = p.x-last.x, dy = p.y-last.y;
+      if(Math.sqrt(dx*dx+dy*dy) > MIN_SEG_DIST){
+        current.points.push(p);
+        last = p;
+        renderDrawings();
+      }
+    }
+    function onUp(ev){
+      els.drawSvg.releasePointerCapture(ev.pointerId);
+      els.drawSvg.removeEventListener("pointermove", onMove);
+      els.drawSvg.removeEventListener("pointerup", onUp);
+    }
+    els.drawSvg.addEventListener("pointermove", onMove);
+    els.drawSvg.addEventListener("pointerup", onUp);
+  });
+
+  els.clearDrawBtn.addEventListener("click", function(){
+    state.drawings = [];
+    renderDrawings();
+  });
+
+  // ---------- notes / header fields ----------
+  els.notes.addEventListener("input", function(){ state.notes = els.notes.value; });
+
+  // ---------- save / load ----------
+  var STORAGE_KEY = "tacticsBoard.slots.v2";
+  function loadSlots(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function saveSlots(slots){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(slots)); }catch(e){}
+  }
+
+  function snapshot(){
+    return {
+      orientation: state.orientation,
+      teamName: els.teamName.value,
+      oppName: els.oppName.value,
+      matchDate: els.matchDate.value,
+      venue: els.venue.value,
+      formation: state.formation,
+      players: state.players,
+      bench: state.bench,
+      showOpponent: state.showOpponent,
+      oppFormation: state.oppFormation,
+      oppPlayers: state.oppPlayers,
+      zones: state.zones,
+      zoneColor: state.zoneColor,
+      tokenColorA: state.tokenColorA,
+      tokenColorB: state.tokenColorB,
+      notes: state.notes,
+      drawings: state.drawings
+    };
+  }
+
+  function applySnapshot(snap){
+    els.teamName.value = snap.teamName || "My Team";
+    els.oppName.value = snap.oppName || "";
+    els.matchDate.value = snap.matchDate || "";
+    els.venue.value = snap.venue || "";
+    state.orientation = snap.orientation || "landscape";
+    state.formation = snap.formation || "442";
+    state.players = snap.players || buildStarters(state.formation, state.orientation);
+    state.bench = snap.bench || [];
+    state.showOpponent = !!snap.showOpponent;
+    state.oppFormation = snap.oppFormation || "442";
+    state.oppPlayers = snap.oppPlayers || buildOpponent(state.oppFormation, state.orientation);
+    state.zones = snap.zones || [];
+    state.selectedZoneId = null;
+    state.zoneColor = snap.zoneColor || PALETTE[0];
+    state.tokenColorA = snap.tokenColorA || PALETTE[0];
+    state.tokenColorB = snap.tokenColorB || PALETTE[1];
+    state.notes = snap.notes || "";
+    state.drawings = snap.drawings || [];
+
+    document.documentElement.style.setProperty("--token-a", state.tokenColorA);
+    document.documentElement.style.setProperty("--token-b", state.tokenColorB);
+
+    els.formationSel.value = state.formation;
+    els.oppFormationSel.value = state.oppFormation;
+    els.oppToggle.checked = state.showOpponent;
+    els.oppFormationField.style.display = state.showOpponent ? "flex" : "none";
+    els.resetOppPosBtn.style.display = state.showOpponent ? "inline-block" : "none";
+    els.teamBColorField.style.display = state.showOpponent ? "flex" : "none";
+    els.notes.value = state.notes;
+
+    syncOrientationVisuals();
+    refreshColorSwatches();
+    renderTokens();
+    renderOpponent();
+    renderZones();
+    renderStarterList();
+    renderBenchList();
+    renderDrawings();
+  }
+
+  function renderSlotList(){
+    var slots = loadSlots();
+    var names = Object.keys(slots);
+    els.slotList.innerHTML = "";
+    if(names.length === 0){
+      var e = document.createElement("div");
+      e.className = "slot-empty";
+      e.textContent = "No saved plans yet.";
+      els.slotList.appendChild(e);
+      return;
+    }
+    names.forEach(function(name){
+      var row = document.createElement("div");
+      row.className = "slot-row";
+      row.innerHTML =
+        '<span class="slot-name">' + escapeHtml(name) + '</span>' +
+        '<button class="btn tiny" data-act="load">Load</button>' +
+        '<button class="btn tiny danger-outline" data-act="del">Delete</button>';
+      row.querySelector('[data-act="load"]').addEventListener("click", function(){
+        var slots2 = loadSlots();
+        if(slots2[name]){
+          applySnapshot(slots2[name]);
+          showToast('Loaded plan "' + name + '"');
+        }
+      });
+      var delBtn = row.querySelector('[data-act="del"]');
+      var confirming = false;
+      delBtn.addEventListener("click", function(){
+        if(!confirming){
+          confirming = true;
+          delBtn.textContent = "Confirm?";
+          setTimeout(function(){ confirming = false; delBtn.textContent = "Delete"; }, 2500);
+          return;
+        }
+        var slots2 = loadSlots();
+        delete slots2[name];
+        saveSlots(slots2);
+        renderSlotList();
+        showToast('Deleted plan "' + name + '"');
+      });
+      els.slotList.appendChild(row);
+    });
+  }
+
+  els.saveSlotBtn.addEventListener("click", function(){
+    var name = (els.slotNameInput.value || "").trim();
+    if(!name){ showToast("Please name the plan before saving"); return; }
+    var slots = loadSlots();
+    slots[name] = snapshot();
+    saveSlots(slots);
+    els.slotNameInput.value = "";
+    renderSlotList();
+    showToast('Saved plan "' + name + '"');
+  });
+
+  // ---------- init ----------
+  setMode("move");
+  syncOrientationVisuals();
+  renderTokens();
+  renderOpponent();
+  renderZones();
+  renderStarterList();
+  renderBenchList();
+  renderDrawings();
+  renderSlotList();
+
+})();
+</script>
