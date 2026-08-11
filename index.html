@@ -767,7 +767,9 @@
 
   var isAdmin = false;
   var fbDirty = false;
-  function markDirty(){ if(isAdmin) fbDirty = true; }
+  var applyingRemote = false;
+  var localGestureActive = false;
+  function markDirty(){ if(isAdmin && !applyingRemote) fbDirty = true; }
 
   var FORMATIONS = {
     "442": { label:"4-4-2", group:"4 at the back", pos:[
@@ -1067,6 +1069,7 @@
       if(!isAdmin || state.mode !== "move") return;
       e.preventDefault();
       el.setPointerCapture(e.pointerId);
+      localGestureActive = true;
       function onMove(ev){
         var p = pointToPercent(ev, els.pitchWrap);
         playerObj.x = clamp(p.x,3,97);
@@ -1079,6 +1082,7 @@
         el.releasePointerCapture(ev.pointerId);
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
+        localGestureActive = false;
       }
       el.addEventListener("pointermove", onMove);
       el.addEventListener("pointerup", onUp);
@@ -1161,6 +1165,7 @@
       e.stopPropagation();
       e.preventDefault();
       handle.setPointerCapture(e.pointerId);
+      localGestureActive = true;
       var startX = e.clientX, startY = e.clientY;
       var startW = z.w, startH = z.h;
       function onMove(ev){
@@ -1185,6 +1190,7 @@
         handle.releasePointerCapture(ev.pointerId);
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
+        localGestureActive = false;
       }
       handle.addEventListener("pointermove", onMove);
       handle.addEventListener("pointerup", onUp);
@@ -1198,6 +1204,7 @@
       if(e.target === remove || e.target === handle) return;
       e.preventDefault();
       el.setPointerCapture(e.pointerId);
+      localGestureActive = true;
       var start = pointToPercent(e, els.pitchWrap);
       var offX = start.x - z.x, offY = start.y - z.y;
       var moved = false;
@@ -1214,6 +1221,7 @@
         el.releasePointerCapture(ev.pointerId);
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
+        localGestureActive = false;
         if(!moved && state.selectedZoneId !== z.id){
           state.selectedZoneId = z.id;
           renderZones();
@@ -1471,6 +1479,7 @@
     if(!isAdmin || state.mode !== "draw") return;
     e.preventDefault();
     els.drawSvg.setPointerCapture(e.pointerId);
+    localGestureActive = true;
     var p0 = pointToPitchUnits(e, els.pitchWrap);
     var current = { color: state.drawColor, points:[p0] };
     state.drawings.push(current);
@@ -1489,6 +1498,7 @@
       els.drawSvg.releasePointerCapture(ev.pointerId);
       els.drawSvg.removeEventListener("pointermove", onMove);
       els.drawSvg.removeEventListener("pointerup", onUp);
+      localGestureActive = false;
     }
     els.drawSvg.addEventListener("pointermove", onMove);
     els.drawSvg.addEventListener("pointerup", onUp);
@@ -1675,17 +1685,29 @@
     if(window.fb) window.fb.signOut();
   });
 
+  var boardBootstrapped = false;
   function initFirebaseSync(){
     window.fb.onAuthStateChanged(function(user){
       isAdmin = !!(user && user.uid === window.fb.ADMIN_UID);
       applyAdminUI();
-      if(isAdmin){ window.fb.pushBoard(snapshot()); }
     });
+    // Every client — admin or viewer — applies live updates from Firebase.
+    // The only exception is while THIS client has a drag/draw gesture in
+    // progress, so an incoming update can't yank a token out from under
+    // your own cursor; localGestureActive clears the moment you let go.
+    // That's also what keeps two admins from fighting each other: each
+    // one's edits now reach the other in real time instead of only ever
+    // broadcasting and never listening.
     window.fb.watchBoard(function(data){
-      if(!isAdmin && data){ applySnapshot(data); }
+      if(!data){ boardBootstrapped = true; return; }
+      if(boardBootstrapped && localGestureActive) return;
+      boardBootstrapped = true;
+      applyingRemote = true;
+      applySnapshot(data);
+      applyingRemote = false;
     });
     setInterval(function(){
-      if(fbDirty && isAdmin){
+      if(fbDirty && isAdmin && boardBootstrapped){
         fbDirty = false;
         window.fb.pushBoard(snapshot());
       }
