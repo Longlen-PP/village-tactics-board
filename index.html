@@ -955,6 +955,24 @@
   var localGestureActive = false;
   function markDirty(){ if(isAdmin && !applyingRemote) fbDirty = true; }
 
+  // Typing into a text field is a "local edit in progress" too, same as a
+  // drag gesture — without this, the periodic Firebase push echoes straight
+  // back and re-renders the list you're typing into (e.g. Squad num/name),
+  // destroying the input element and kicking focus out after every
+  // keystroke. Reuse the same guard the drag code already checks.
+  document.addEventListener("focusin", function(e){
+    var t = e.target;
+    if(t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA") && t.type !== "checkbox"){
+      localGestureActive = true;
+    }
+  });
+  document.addEventListener("focusout", function(e){
+    var t = e.target;
+    if(t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA") && t.type !== "checkbox"){
+      localGestureActive = false;
+    }
+  });
+
   var FORMATIONS = {
     "442": { label:"4-4-2", group:"4 at the back", pos:[
       {role:"GK",x:50,y:93},{role:"LB",x:18,y:75},{role:"CB",x:38,y:78},{role:"CB",x:62,y:78},{role:"RB",x:82,y:75},
