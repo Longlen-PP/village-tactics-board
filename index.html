@@ -82,6 +82,11 @@
     color:var(--accent);
     font-weight:700;
   }
+  .team-name-row{display:flex; align-items:center; gap:10px;}
+  .team-logo{
+    width:40px; height:40px; border-radius:50%; background:#fff;
+    object-fit:contain; padding:3px; flex:none;
+  }
   .team-name{
     font-family:var(--font-display);
     font-weight:900;
@@ -151,6 +156,104 @@
   .pitch-wrap.view-only .zone,
   .pitch-wrap.view-only .drawings-svg{ pointer-events:none !important; cursor:default !important; }
 
+  /* ---------- Top-level tabs (Match Board / Squad / Opponent) ---------- */
+  .top-tabs{ display:flex; gap:8px; flex-wrap:wrap; }
+  .top-tab{
+    appearance:none;
+    border:1px solid var(--line-strong);
+    background:var(--bg-panel);
+    color:var(--ink-dim);
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:.82rem;
+    font-weight:700;
+    cursor:pointer;
+    letter-spacing:.01em;
+  }
+  .top-tab:hover{border-color:var(--accent); color:var(--ink);}
+  .top-tab.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+
+  /* ---------- Squad tab ---------- */
+  .squad-panel{max-width:900px;}
+  .squad-toolbar{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .squad-row .pos{
+    flex:none; width:52px;
+    background:transparent; border:none; border-bottom:1px solid transparent;
+    color:var(--ink-dim); text-align:center; font-size:.78rem; font-weight:600;
+    padding:5px 2px;
+  }
+  .squad-row .pos:hover, .squad-row .pos:focus{border-bottom-color:var(--line-strong);}
+
+  /* ---------- Match board squad-assignment dropdowns ---------- */
+  .roster-row select.squad-pick{
+    flex:1; min-width:0;
+    background:var(--bg-raised); border:1px solid var(--line-strong); border-radius:5px;
+    color:var(--ink); padding:6px 6px; font-size:.8rem; font-weight:600;
+  }
+  .roster-row select.squad-pick:disabled{opacity:.7;}
+
+  /* ---------- Lineup tab (shareable card) ---------- */
+  .lineup-panel{max-width:100%;}
+  .lineup-workspace{
+    display:grid;
+    grid-template-columns:minmax(0,1.4fr) minmax(280px,360px);
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:1000px){
+    .lineup-workspace{grid-template-columns:1fr;}
+  }
+  .lineup-toolbar{margin-bottom:14px;}
+  .lineup-card-scroll{overflow-x:auto; padding-bottom:6px;}
+  .lineup-card{
+    width:680px; max-width:none; margin:0 auto;
+    background:#0d1a12;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    font-family:var(--font-body);
+  }
+  .lineup-card-header{
+    display:flex; align-items:center; gap:16px;
+    padding:20px 24px;
+    background:var(--bg-raised);
+    border-bottom:3px solid var(--accent);
+  }
+  .lineup-logo{width:60px; height:60px; border-radius:50%; background:#fff; object-fit:contain; padding:4px; flex:none;}
+  .lineup-eyebrow{font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim);}
+  .lineup-heading{font-family:var(--font-display); font-weight:900; font-size:1.7rem; line-height:1.05; text-transform:uppercase; color:var(--accent);}
+  .lineup-body{display:flex; gap:16px; padding:20px;}
+  .lineup-list{flex:0 0 190px; display:flex; flex-direction:column; gap:9px;}
+  .lineup-list-row{display:flex; align-items:center; gap:8px; color:#f4f6ef; font-size:.84rem; font-weight:700;}
+  .lineup-list-row .lineup-num{
+    width:24px; height:24px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; font-size:.72rem; font-family:var(--font-mono); flex:none;
+  }
+  .lineup-list-row .lineup-name{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .lineup-list-row .lineup-pos{font-size:.64rem; color:#9fb3a0; font-weight:600; flex:none;}
+  .lineup-pitch-wrap{
+    position:relative; flex:1; aspect-ratio:68/106; border-radius:8px; overflow:hidden;
+    background: repeating-linear-gradient(180deg, var(--pitch-a) 0 12.5%, var(--pitch-b) 12.5% 25%);
+  }
+  .lineup-pitch-wrap svg{position:absolute; inset:0; width:100%; height:100%;}
+  .lineup-markings path, .lineup-markings rect, .lineup-markings circle, .lineup-markings line{
+    fill:none; stroke:var(--pitch-line); stroke-width:.5; vector-effect:non-scaling-stroke;
+  }
+  .lineup-markings .dot{fill:var(--pitch-line); stroke:none;}
+  .lineup-token{position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .lineup-token .badge{
+    width:30px; height:30px; border-radius:50%; background:var(--token-a); color:var(--accent-ink);
+    border:2px solid #fff4de; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-weight:700; font-size:.78rem; box-shadow:0 3px 8px rgba(0,0,0,.4);
+  }
+  .lineup-token.gk .badge{background:#111; color:#fff;}
+  .lineup-token .label{
+    font-size:.6rem; font-weight:700; color:#fff; background:rgba(13,26,18,.75);
+    padding:1px 5px; border-radius:999px; white-space:nowrap;
+  }
+  .lineup-subs-bar{background:var(--accent); color:var(--accent-ink); padding:10px 20px; font-size:.78rem; font-weight:700;}
+  .lineup-subs-label{letter-spacing:.08em; margin-right:8px; text-transform:uppercase;}
+
   /* ---------- Workspace layout ---------- */
   .workspace{
     display:grid;
@@ -189,6 +292,7 @@
 
   /* ---------- Board toolbar ---------- */
   .board-panel{padding:14px 16px 16px;}
+  .board-image-toolbar{margin-bottom:10px;}
   .board-toolbar{
     display:flex;
     flex-direction:column;
@@ -526,7 +630,10 @@
   <header class="masthead">
     <div class="masthead-left">
       <div class="eyebrow">Match Plan · Tactics Board</div>
-      <input class="team-name" id="teamName" value="My Team" maxlength="28" aria-label="Team name">
+      <div class="team-name-row">
+        <img class="team-logo" id="teamLogo" src="village-esport-logo.png" alt="Team logo">
+        <input class="team-name" id="teamName" value="My Team" maxlength="28" aria-label="Team name">
+      </div>
     </div>
     <div class="masthead-right no-print">
       <div id="authLoggedOut">
@@ -546,9 +653,18 @@
 
   <div class="view-only-banner no-print" id="viewOnlyBanner">👀 View only — connected live. Log in as admin to edit.</div>
 
-  <div class="workspace">
+  <nav class="top-tabs no-print" id="topTabs">
+    <button type="button" class="top-tab active" data-tab="board">⚽ Match Board</button>
+    <button type="button" class="top-tab" data-tab="squad">🧑‍🤝‍🧑 Squad</button>
+    <button type="button" class="top-tab" data-tab="lineup">🖼️ Lineup</button>
+  </nav>
+
+  <div class="workspace" id="tabBoard">
 
     <section class="panel board-panel">
+      <div class="board-image-toolbar no-print">
+        <button class="btn tiny" id="saveImageBtn" type="button">📸 Save Board Image</button>
+      </div>
       <div class="board-toolbar no-print" id="boardToolbar" style="display:none;">
         <div class="toolbar-row">
           <span class="toolbar-row-label">Setup</span>
@@ -700,9 +816,90 @@
 
     </aside>
   </div>
+
+  <section class="panel squad-panel" id="tabSquad" style="display:none;">
+    <div class="squad-toolbar no-print">
+      <button class="btn tiny" id="addSquadBtn" type="button">+ Add Player</button>
+    </div>
+    <h2 class="section-title">Squad <span class="count" id="squadCount">0</span></h2>
+    <div id="squadList"></div>
+    <div class="hint-small">This is the permanent player list. Everyone added here shows up in the dropdowns on the Match Board and the Lineup card.</div>
+  </section>
+
+  <section class="panel lineup-panel" id="tabLineup" style="display:none;">
+    <div class="lineup-workspace">
+      <div class="lineup-preview-col">
+        <div class="lineup-toolbar no-print">
+          <button class="btn primary tiny" id="saveLineupImageBtn" type="button">📸 Save Lineup Image</button>
+        </div>
+        <div class="lineup-card-scroll">
+          <div class="lineup-card" id="lineupCard">
+            <div class="lineup-card-header">
+              <img class="lineup-logo" id="lineupLogo" src="village-esport-logo.png" alt="Village Esport">
+              <div class="lineup-card-title">
+                <div class="lineup-eyebrow" id="lineupTeamName">MY TEAM</div>
+                <div class="lineup-heading">Starting<br>Line Up</div>
+              </div>
+            </div>
+            <div class="lineup-body">
+              <div class="lineup-list" id="lineupList"></div>
+              <div class="lineup-pitch-wrap">
+                <svg viewBox="0 0 68 106" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                  <g class="lineup-markings">
+                    <rect x="1" y="1" width="66" height="104"></rect>
+                    <line x1="1" y1="53" x2="67" y2="53"></line>
+                    <circle cx="34" cy="53" r="9.15"></circle>
+                    <circle class="dot" cx="34" cy="53" r="0.35"></circle>
+                    <rect x="13.85" y="1" width="40.3" height="16.5"></rect>
+                    <rect x="24.85" y="1" width="18.3" height="5.5"></rect>
+                    <circle class="dot" cx="34" cy="12.5" r="0.35"></circle>
+                    <path d="M 26.5 17.5 A 9.15 9.15 0 0 0 41.5 17.5"></path>
+                    <rect x="13.85" y="88.5" width="40.3" height="16.5"></rect>
+                    <rect x="24.85" y="99.5" width="18.3" height="5.5"></rect>
+                    <circle class="dot" cx="34" cy="93.5" r="0.35"></circle>
+                    <path d="M 26.5 88.5 A 9.15 9.15 0 0 1 41.5 88.5"></path>
+                  </g>
+                </svg>
+                <div class="lineup-tokens" id="lineupTokens"></div>
+              </div>
+            </div>
+            <div class="lineup-subs-bar">
+              <span class="lineup-subs-label">Substitutions</span>
+              <span class="lineup-subs-names" id="lineupSubsNames">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="hint-small">This lineup is independent from the Match Board — the formation and players you pick here don't affect the tactics pitch.</div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <h2 class="section-title">Lineup Formation</h2>
+          <div class="field">
+            <label for="lineupFormationSel">Formation</label>
+            <select id="lineupFormationSel"></select>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 class="section-title">Starting XI <span class="count">XI</span></h2>
+          <div id="lineupStarterList"></div>
+        </div>
+        <div class="panel">
+          <h2 class="section-title">Bench <span class="count" id="lineupBenchCount">0</span></h2>
+          <div id="lineupBenchList"></div>
+          <div class="add-bench no-print" id="lineupAddBenchWrap" style="display:none;">
+            <button class="btn tiny" id="lineupAddBenchBtn" type="button">+ Add Substitute</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -858,10 +1055,42 @@
     return "rgba("+r+","+g+","+b+","+a+")";
   }
 
+  // ---------- squad lookups (used by Match Board dropdowns + Lineup card) ----------
+  function squadById(id){
+    return state.squad.find(function(s){ return s.id === id; });
+  }
+  // Match Board and the Lineup card are independent squad-assignment
+  // tracks — each gets its own "who's already placed" set so picking a
+  // player on one tab never disables them on the other.
+  function assignedSquadIdsFrom(playersArr, benchArr){
+    var used = {};
+    playersArr.forEach(function(p){ if(p.squadId) used[p.squadId] = true; });
+    benchArr.forEach(function(b){ if(b.squadId) used[b.squadId] = true; });
+    return used;
+  }
+  function fillSquadSelectFrom(selectEl, currentId, playersArr, benchArr){
+    var used = assignedSquadIdsFrom(playersArr, benchArr);
+    selectEl.innerHTML = "";
+    var empty = document.createElement("option");
+    empty.value = ""; empty.textContent = "— Empty —";
+    selectEl.appendChild(empty);
+    state.squad.forEach(function(p){
+      var opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = "#" + p.num + " " + p.name + (p.pos ? " (" + p.pos + ")" : "");
+      if(used[p.id] && p.id !== currentId){ opt.disabled = true; opt.textContent += " — placed"; }
+      selectEl.appendChild(opt);
+    });
+    selectEl.value = currentId || "";
+  }
+  function fillSquadSelect(selectEl, currentId){
+    fillSquadSelectFrom(selectEl, currentId, state.players, state.bench);
+  }
+
   function buildStarters(formationKey, orientation){
     var preset = activeFormations(orientation)[formationKey].pos;
-    return preset.map(function(p,i){
-      return { id:uid(), num:i+1, name:p.role, role:p.role, x:p.x, y:p.y, nameEdited:false };
+    return preset.map(function(p){
+      return { id:uid(), role:p.role, x:p.x, y:p.y, squadId:null };
     });
   }
 
@@ -873,15 +1102,20 @@
     });
   }
 
+  // Lineup card slots don't carry x/y — the card is always portrait and
+  // always uses the clean formation preset, never a dragged position.
+  function buildLineupSlots(formationKey){
+    var preset = FORMATIONS[formationKey].pos;
+    return preset.map(function(p){
+      return { id:uid(), role:p.role, squadId:null };
+    });
+  }
+
   var state = {
     orientation:"landscape",
     formation:"442",
     players: buildStarters("442","landscape"),
-    bench: [
-      {id:uid(), num:12, name:"Sub"},
-      {id:uid(), num:13, name:"Sub"},
-      {id:uid(), num:14, name:"Sub"}
-    ],
+    bench: [],
     showOpponent:false,
     oppFormation:"442",
     oppPlayers: buildOpponent("442","landscape"),
@@ -894,7 +1128,12 @@
     drawings:[],
     mode:"move",
     drawColor:"accent",
-    pendingSubId:null
+    pendingSubId:null,
+    squad: [],
+    lineupFormation:"442",
+    lineupStarters: buildLineupSlots("442"),
+    lineupBench: [],
+    lineupPendingSubId: null
   };
 
   var els = {
@@ -935,6 +1174,7 @@
     slotList: document.getElementById("slotList"),
     toast: document.getElementById("toast"),
     teamName: document.getElementById("teamName"),
+    teamLogo: document.getElementById("teamLogo"),
     boardToolbar: document.getElementById("boardToolbar"),
     savePanel: document.getElementById("savePanel"),
     addBenchWrap: document.getElementById("addBenchWrap"),
@@ -946,8 +1186,49 @@
     authPassword: document.getElementById("authPassword"),
     authSubmitBtn: document.getElementById("authSubmitBtn"),
     authError: document.getElementById("authError"),
-    authLogoutBtn: document.getElementById("authLogoutBtn")
+    authLogoutBtn: document.getElementById("authLogoutBtn"),
+    topTabs: document.getElementById("topTabs"),
+    tabBoard: document.getElementById("tabBoard"),
+    tabSquad: document.getElementById("tabSquad"),
+    tabLineup: document.getElementById("tabLineup"),
+    squadList: document.getElementById("squadList"),
+    squadCount: document.getElementById("squadCount"),
+    addSquadBtn: document.getElementById("addSquadBtn"),
+    saveImageBtn: document.getElementById("saveImageBtn"),
+    lineupCard: document.getElementById("lineupCard"),
+    lineupLogo: document.getElementById("lineupLogo"),
+    lineupTeamName: document.getElementById("lineupTeamName"),
+    lineupList: document.getElementById("lineupList"),
+    lineupTokens: document.getElementById("lineupTokens"),
+    lineupSubsNames: document.getElementById("lineupSubsNames"),
+    saveLineupImageBtn: document.getElementById("saveLineupImageBtn"),
+    lineupFormationSel: document.getElementById("lineupFormationSel"),
+    lineupStarterList: document.getElementById("lineupStarterList"),
+    lineupBenchList: document.getElementById("lineupBenchList"),
+    lineupBenchCount: document.getElementById("lineupBenchCount"),
+    lineupAddBenchWrap: document.getElementById("lineupAddBenchWrap"),
+    lineupAddBenchBtn: document.getElementById("lineupAddBenchBtn")
   };
+
+  // Falls back to an inline SVG badge if the real logo file
+  // (village-esport-logo.png) hasn't been added to the repo yet — keeps the
+  // header from showing a broken-image icon, and keeps html2canvas from
+  // choking on a 404'd <img> when saving a card as PNG.
+  var LOGO_FALLBACK = "data:image/svg+xml;utf8," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+    '<circle cx="32" cy="32" r="31" fill="#ffffff"/>' +
+    '<circle cx="32" cy="32" r="31" fill="none" stroke="#e2a63b" stroke-width="2"/>' +
+    '<text x="32" y="40" font-size="20" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" fill="#101f16">VE</text>' +
+    '</svg>'
+  );
+  function attachLogoFallback(imgEl){
+    imgEl.addEventListener("error", function(){
+      imgEl.onerror = null;
+      imgEl.src = LOGO_FALLBACK;
+    });
+  }
+  attachLogoFallback(els.teamLogo);
+  attachLogoFallback(els.lineupLogo);
 
   var toastTimer = null;
   function showToast(msg){
@@ -956,6 +1237,19 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ els.toast.classList.remove("show"); }, 1800);
   }
+
+  // ---------- top-level tabs ----------
+  var TAB_PANELS = { board: els.tabBoard, squad: els.tabSquad, lineup: els.tabLineup };
+  function switchTab(tab){
+    Object.keys(TAB_PANELS).forEach(function(k){ TAB_PANELS[k].style.display = (k === tab) ? "" : "none"; });
+    Array.prototype.forEach.call(els.topTabs.querySelectorAll(".top-tab"), function(btn){
+      btn.classList.toggle("active", btn.dataset.tab === tab);
+    });
+    if(tab === "lineup"){ renderLineup(); renderLineupStarterList(); renderLineupBenchList(); }
+  }
+  Array.prototype.forEach.call(els.topTabs.querySelectorAll(".top-tab"), function(btn){
+    btn.addEventListener("click", function(){ switchTab(btn.dataset.tab); });
+  });
 
   // ---------- populate formation selects (grouped by defensive line) ----------
   function fillFormationSelect(selectEl){
@@ -979,8 +1273,10 @@
   }
   fillFormationSelect(els.formationSel);
   fillFormationSelect(els.oppFormationSel);
+  fillFormationSelect(els.lineupFormationSel);
   els.formationSel.value = state.formation;
   els.oppFormationSel.value = state.oppFormation;
+  els.lineupFormationSel.value = state.lineupFormation;
 
   // ---------- colour swatch pickers ----------
   function buildPaletteSwatches(container, getActive, onPick){
@@ -1102,12 +1398,13 @@
         });
         tokenEls[p.id] = t;
       }
+      var sp = p.squadId ? squadById(p.squadId) : null;
       t.className = "token" + (p.role === "GK" ? " gk" : "");
       t.style.left = p.x + "%";
       t.style.top = p.y + "%";
       t.innerHTML =
-        '<div class="badge">' + p.num + '</div>' +
-        '<div class="label">' + escapeHtml(p.name) + '</div>';
+        '<div class="badge">' + (sp ? sp.num : "?") + '</div>' +
+        '<div class="label">' + escapeHtml(sp ? sp.name : p.role) + '</div>';
     });
     Object.keys(tokenEls).forEach(function(id){
       if(!seen[id]){ tokenEls[id].remove(); delete tokenEls[id]; }
@@ -1297,26 +1594,20 @@
       row.className = "roster-row starter-row";
       row.dataset.id = p.id;
       row.innerHTML =
-        '<input class="num" value="' + p.num + '" inputmode="numeric" maxlength="2">' +
-        '<input class="name" value="' + escapeHtml(p.name) + '" maxlength="16">' +
-        '<span class="role">' + p.role + '</span>';
-      var numInput = row.querySelector(".num");
-      var nameInput = row.querySelector(".name");
-      numInput.disabled = !isAdmin;
-      nameInput.disabled = !isAdmin;
-      numInput.addEventListener("input", function(){
-        var v = parseInt(numInput.value,10);
-        p.num = isNaN(v) ? p.num : v;
+        '<span class="role">' + p.role + '</span>' +
+        '<select class="squad-pick"></select>';
+      var select = row.querySelector(".squad-pick");
+      fillSquadSelect(select, p.squadId);
+      select.disabled = !isAdmin;
+      select.addEventListener("change", function(){
+        p.squadId = select.value || null;
         renderTokens();
-      });
-      nameInput.addEventListener("input", function(){
-        p.name = nameInput.value || p.role;
-        p.nameEdited = true;
-        renderTokens();
+        renderStarterList();
+        renderBenchList();
       });
       row.addEventListener("click", function(e){
         if(!isAdmin) return;
-        if(e.target === numInput || e.target === nameInput) return;
+        if(e.target === select) return;
         if(state.pendingSubId){ doSub(state.pendingSubId, p.id); }
       });
       if(isAdmin && state.pendingSubId) row.style.cursor = "pointer";
@@ -1331,7 +1622,7 @@
     if(state.bench.length === 0){
       var empty = document.createElement("div");
       empty.className = "slot-empty";
-      empty.textContent = "No substitutes yet.";
+      empty.textContent = "No bench slots yet.";
       els.benchList.appendChild(empty);
     }
     state.bench.forEach(function(b){
@@ -1340,28 +1631,26 @@
       row.dataset.id = b.id;
       if(state.pendingSubId === b.id) row.classList.add("selected");
       row.innerHTML =
-        '<input class="num" value="' + b.num + '" inputmode="numeric" maxlength="2">' +
-        '<input class="name" value="' + escapeHtml(b.name) + '" maxlength="16">' +
-        '<button class="btn tiny sub-btn no-print" title="Bring on / select to substitute">⇄</button>' +
-        '<button class="btn tiny danger-outline no-print" title="Remove substitute">✕</button>';
-      var numInput = row.querySelector(".num");
-      var nameInput = row.querySelector(".name");
+        '<select class="squad-pick"></select>' +
+        '<button class="btn tiny sub-btn no-print" title="Select to substitute in">⇄</button>' +
+        '<button class="btn tiny danger-outline no-print" title="Remove bench slot">✕</button>';
+      var select = row.querySelector(".squad-pick");
+      fillSquadSelect(select, b.squadId);
       var subBtn = row.querySelector(".sub-btn");
       var delBtn = row.querySelector(".danger-outline");
-      numInput.disabled = !isAdmin;
-      nameInput.disabled = !isAdmin;
+      select.disabled = !isAdmin;
       subBtn.style.display = isAdmin ? "" : "none";
       delBtn.style.display = isAdmin ? "" : "none";
-      numInput.addEventListener("input", function(){
-        var v = parseInt(numInput.value,10);
-        b.num = isNaN(v) ? b.num : v;
+      select.addEventListener("change", function(){
+        b.squadId = select.value || null;
+        renderStarterList();
+        renderBenchList();
       });
-      nameInput.addEventListener("input", function(){ b.name = nameInput.value || "Sub"; });
       subBtn.addEventListener("click", function(){
         state.pendingSubId = (state.pendingSubId === b.id) ? null : b.id;
         renderBenchList();
         renderStarterList();
-        showToast(state.pendingSubId ? "Pick a starter to swap out" : "Substitution cancelled");
+        showToast(state.pendingSubId ? "Pick a starter to swap with" : "Substitution cancelled");
       });
       delBtn.addEventListener("click", function(){
         state.bench = state.bench.filter(function(x){ return x.id !== b.id; });
@@ -1376,20 +1665,261 @@
     var b = state.bench.find(function(x){ return x.id === benchId; });
     var p = state.players.find(function(x){ return x.id === starterId; });
     if(!b || !p) return;
-    var tmpNum = p.num, tmpName = p.name;
-    p.num = b.num; p.name = b.name; p.nameEdited = true;
-    b.num = tmpNum; b.name = tmpName;
+    var tmp = p.squadId;
+    p.squadId = b.squadId;
+    b.squadId = tmp;
     state.pendingSubId = null;
     renderStarterList();
     renderBenchList();
     renderTokens();
-    showToast("Substituted: " + p.name);
+    var sp = p.squadId ? squadById(p.squadId) : null;
+    showToast("Substituted: " + (sp ? sp.name : "empty slot"));
   }
 
   els.addBenchBtn.addEventListener("click", function(){
-    var maxNum = state.players.concat(state.bench).reduce(function(m,x){ return Math.max(m,x.num); }, 0);
-    state.bench.push({ id:uid(), num:maxNum+1, name:"Sub" });
+    state.bench.push({ id:uid(), squadId:null });
     renderBenchList();
+  });
+
+  // ---------- squad (persistent roster) ----------
+  function renderSquadList(){
+    markDirty();
+    els.squadList.innerHTML = "";
+    els.squadCount.textContent = state.squad.length;
+    if(state.squad.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "slot-empty";
+      empty.textContent = isAdmin ? 'No players yet — click "+ Add Player" to start the squad list.' : "No players recorded yet.";
+      els.squadList.appendChild(empty);
+      return;
+    }
+    state.squad.forEach(function(p){
+      var row = document.createElement("div");
+      row.className = "roster-row squad-row";
+      row.dataset.id = p.id;
+      row.innerHTML =
+        '<input class="num" value="' + p.num + '" inputmode="numeric" maxlength="2">' +
+        '<input class="name" value="' + escapeHtml(p.name) + '" maxlength="16">' +
+        '<input class="pos" value="' + escapeHtml(p.pos || "") + '" maxlength="6" placeholder="Pos">' +
+        '<button class="btn tiny danger-outline remove-btn no-print" title="Remove player">✕</button>';
+      var numInput = row.querySelector(".num");
+      var nameInput = row.querySelector(".name");
+      var posInput = row.querySelector(".pos");
+      var removeBtn = row.querySelector(".remove-btn");
+      numInput.disabled = !isAdmin;
+      nameInput.disabled = !isAdmin;
+      posInput.disabled = !isAdmin;
+      removeBtn.style.display = isAdmin ? "" : "none";
+      numInput.addEventListener("input", function(){
+        var v = parseInt(numInput.value,10);
+        p.num = isNaN(v) ? p.num : v;
+        markDirty();
+      });
+      nameInput.addEventListener("input", function(){ p.name = nameInput.value || "Player"; markDirty(); });
+      posInput.addEventListener("input", function(){ p.pos = posInput.value; markDirty(); });
+      removeBtn.addEventListener("click", function(){
+        state.squad = state.squad.filter(function(x){ return x.id !== p.id; });
+        state.players.forEach(function(sp){ if(sp.squadId === p.id) sp.squadId = null; });
+        state.bench.forEach(function(sb){ if(sb.squadId === p.id) sb.squadId = null; });
+        renderSquadList();
+        renderTokens();
+        renderStarterList();
+        renderBenchList();
+      });
+      els.squadList.appendChild(row);
+    });
+  }
+
+  els.addSquadBtn.addEventListener("click", function(){
+    var maxNum = state.squad.reduce(function(m,x){ return Math.max(m,x.num); }, 0);
+    state.squad.push({ id:uid(), num:maxNum+1, name:"New Player", pos:"" });
+    renderSquadList();
+  });
+
+  // ---------- save board as image ----------
+  els.saveImageBtn.addEventListener("click", function(){
+    if(!window.html2canvas){ showToast("Image tool still loading, try again in a moment"); return; }
+    var hadSelection = state.selectedZoneId;
+    if(hadSelection){ state.selectedZoneId = null; renderZones(); }
+    html2canvas(els.pitchWrap, { backgroundColor:null, scale:2 }).then(function(canvas){
+      if(hadSelection){ state.selectedZoneId = hadSelection; renderZones(); }
+      var link = document.createElement("a");
+      var safeName = (els.teamName.value || "board").replace(/[^a-z0-9]+/gi,"-").toLowerCase();
+      link.download = safeName + "-board.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      showToast("Image saved");
+    }).catch(function(err){
+      if(hadSelection){ state.selectedZoneId = hadSelection; renderZones(); }
+      console.error("Save Board Image failed:", err);
+      showToast("Could not create image");
+    });
+  });
+
+  // ---------- lineup card (shareable starting XI graphic) ----------
+  // Fully independent from the Match Board: its own formation, its own
+  // starter/bench squad assignments — editing here never touches state.players.
+  function renderLineup(){
+    els.lineupTeamName.textContent = (els.teamName.value || "My Team").toUpperCase();
+    var preset = FORMATIONS[state.lineupFormation].pos;
+    els.lineupList.innerHTML = "";
+    state.lineupStarters.forEach(function(p){
+      var sp = p.squadId ? squadById(p.squadId) : null;
+      var row = document.createElement("div");
+      row.className = "lineup-list-row";
+      row.innerHTML =
+        '<span class="lineup-num">' + (sp ? sp.num : "-") + '</span>' +
+        '<span class="lineup-name">' + escapeHtml(sp ? sp.name : "— empty —") + '</span>' +
+        '<span class="lineup-pos">' + p.role + '</span>';
+      els.lineupList.appendChild(row);
+    });
+    els.lineupTokens.innerHTML = "";
+    state.lineupStarters.forEach(function(p, i){
+      var sp = p.squadId ? squadById(p.squadId) : null;
+      var slot = preset[i];
+      var t = document.createElement("div");
+      t.className = "lineup-token" + (p.role === "GK" ? " gk" : "");
+      t.style.left = slot.x + "%";
+      t.style.top = slot.y + "%";
+      t.innerHTML =
+        '<div class="badge">' + (sp ? sp.num : "?") + '</div>' +
+        '<div class="label">' + escapeHtml(sp ? sp.name : p.role) + '</div>';
+      els.lineupTokens.appendChild(t);
+    });
+    var subNames = state.lineupBench.map(function(b){
+      var sp = b.squadId ? squadById(b.squadId) : null;
+      return sp ? sp.name : null;
+    }).filter(function(n){ return !!n; });
+    els.lineupSubsNames.textContent = subNames.length ? subNames.join(", ") : "—";
+  }
+
+  function renderLineupStarterList(){
+    markDirty();
+    els.lineupStarterList.innerHTML = "";
+    state.lineupStarters.forEach(function(p){
+      var row = document.createElement("div");
+      row.className = "roster-row starter-row";
+      row.dataset.id = p.id;
+      row.innerHTML =
+        '<span class="role">' + p.role + '</span>' +
+        '<select class="squad-pick"></select>';
+      var select = row.querySelector(".squad-pick");
+      fillSquadSelectFrom(select, p.squadId, state.lineupStarters, state.lineupBench);
+      select.disabled = !isAdmin;
+      select.addEventListener("change", function(){
+        p.squadId = select.value || null;
+        renderLineupStarterList();
+        renderLineupBenchList();
+        renderLineup();
+      });
+      row.addEventListener("click", function(e){
+        if(!isAdmin) return;
+        if(e.target === select) return;
+        if(state.lineupPendingSubId){ doLineupSub(state.lineupPendingSubId, p.id); }
+      });
+      if(isAdmin && state.lineupPendingSubId) row.style.cursor = "pointer";
+      els.lineupStarterList.appendChild(row);
+    });
+  }
+
+  function renderLineupBenchList(){
+    markDirty();
+    els.lineupBenchList.innerHTML = "";
+    els.lineupBenchCount.textContent = state.lineupBench.length;
+    if(state.lineupBench.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "slot-empty";
+      empty.textContent = "No bench slots yet.";
+      els.lineupBenchList.appendChild(empty);
+    }
+    state.lineupBench.forEach(function(b){
+      var row = document.createElement("div");
+      row.className = "roster-row bench-row";
+      row.dataset.id = b.id;
+      if(state.lineupPendingSubId === b.id) row.classList.add("selected");
+      row.innerHTML =
+        '<select class="squad-pick"></select>' +
+        '<button class="btn tiny sub-btn no-print" title="Select to substitute in">⇄</button>' +
+        '<button class="btn tiny danger-outline no-print" title="Remove bench slot">✕</button>';
+      var select = row.querySelector(".squad-pick");
+      fillSquadSelectFrom(select, b.squadId, state.lineupStarters, state.lineupBench);
+      var subBtn = row.querySelector(".sub-btn");
+      var delBtn = row.querySelector(".danger-outline");
+      select.disabled = !isAdmin;
+      subBtn.style.display = isAdmin ? "" : "none";
+      delBtn.style.display = isAdmin ? "" : "none";
+      select.addEventListener("change", function(){
+        b.squadId = select.value || null;
+        renderLineupStarterList();
+        renderLineupBenchList();
+        renderLineup();
+      });
+      subBtn.addEventListener("click", function(){
+        state.lineupPendingSubId = (state.lineupPendingSubId === b.id) ? null : b.id;
+        renderLineupBenchList();
+        renderLineupStarterList();
+        showToast(state.lineupPendingSubId ? "Pick a starter to swap with" : "Substitution cancelled");
+      });
+      delBtn.addEventListener("click", function(){
+        state.lineupBench = state.lineupBench.filter(function(x){ return x.id !== b.id; });
+        if(state.lineupPendingSubId === b.id) state.lineupPendingSubId = null;
+        renderLineupBenchList();
+        renderLineup();
+      });
+      els.lineupBenchList.appendChild(row);
+    });
+  }
+
+  function doLineupSub(benchId, starterId){
+    var b = state.lineupBench.find(function(x){ return x.id === benchId; });
+    var p = state.lineupStarters.find(function(x){ return x.id === starterId; });
+    if(!b || !p) return;
+    var tmp = p.squadId;
+    p.squadId = b.squadId;
+    b.squadId = tmp;
+    state.lineupPendingSubId = null;
+    renderLineupStarterList();
+    renderLineupBenchList();
+    renderLineup();
+    var sp = p.squadId ? squadById(p.squadId) : null;
+    showToast("Substituted: " + (sp ? sp.name : "empty slot"));
+  }
+
+  els.lineupAddBenchBtn.addEventListener("click", function(){
+    state.lineupBench.push({ id:uid(), squadId:null });
+    renderLineupBenchList();
+    renderLineup();
+  });
+
+  els.lineupFormationSel.addEventListener("change", function(){
+    state.lineupFormation = els.lineupFormationSel.value;
+    state.lineupStarters = buildLineupSlots(state.lineupFormation);
+    renderLineupStarterList();
+    renderLineupBenchList();
+    renderLineup();
+  });
+
+  els.saveLineupImageBtn.addEventListener("click", function(){
+    if(!window.html2canvas){ showToast("Image tool still loading, try again in a moment"); return; }
+    renderLineup();
+    html2canvas(els.lineupCard, {
+      backgroundColor:"#0d1a12",
+      scale:2,
+      // The logo <img> is the one element html2canvas has been failing to
+      // rasterize (broken/placeholder image sources trip it up) — skip it
+      // entirely rather than let one bad image sink the whole capture.
+      ignoreElements: function(el){ return el === els.lineupLogo; }
+    }).then(function(canvas){
+      var link = document.createElement("a");
+      var safeName = (els.teamName.value || "lineup").replace(/[^a-z0-9]+/gi,"-").toLowerCase();
+      link.download = safeName + "-lineup.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      showToast("Lineup image saved");
+    }).catch(function(err){
+      console.error("Save Lineup Image failed:", err);
+      showToast("Could not create image");
+    });
   });
 
   // ---------- formation change ----------
@@ -1399,7 +1929,6 @@
     state.players.forEach(function(p, i){
       var slot = preset[i];
       p.x = slot.x; p.y = slot.y; p.role = slot.role;
-      if(!p.nameEdited) p.name = slot.role;
     });
     renderTokens();
     renderStarterList();
@@ -1563,7 +2092,11 @@
       tokenColorA: state.tokenColorA,
       tokenColorB: state.tokenColorB,
       notes: state.notes,
-      drawings: state.drawings
+      drawings: state.drawings,
+      squad: state.squad,
+      lineupFormation: state.lineupFormation,
+      lineupStarters: state.lineupStarters,
+      lineupBench: state.lineupBench
     };
   }
 
@@ -1583,12 +2116,17 @@
     state.tokenColorB = snap.tokenColorB || PALETTE[1];
     state.notes = snap.notes || "";
     state.drawings = snap.drawings || [];
+    state.squad = snap.squad || [];
+    state.lineupFormation = snap.lineupFormation || "442";
+    state.lineupStarters = snap.lineupStarters || buildLineupSlots(state.lineupFormation);
+    state.lineupBench = snap.lineupBench || [];
 
     document.documentElement.style.setProperty("--token-a", state.tokenColorA);
     document.documentElement.style.setProperty("--token-b", state.tokenColorB);
 
     els.formationSel.value = state.formation;
     els.oppFormationSel.value = state.oppFormation;
+    els.lineupFormationSel.value = state.lineupFormation;
     els.oppToggle.checked = state.showOpponent;
     els.oppFormationField.style.display = state.showOpponent ? "flex" : "none";
     els.resetOppPosBtn.style.display = state.showOpponent ? "inline-block" : "none";
@@ -1603,6 +2141,10 @@
     renderStarterList();
     renderBenchList();
     renderDrawings();
+    renderSquadList();
+    renderLineup();
+    renderLineupStarterList();
+    renderLineupBenchList();
   }
 
   function renderSlotList(){
@@ -1669,11 +2211,18 @@
     els.pitchWrap.classList.toggle("view-only", !isAdmin);
     els.teamName.disabled = !isAdmin;
     els.notes.disabled = !isAdmin;
+    els.addSquadBtn.style.display = isAdmin ? "" : "none";
+    els.lineupAddBenchWrap.style.display = isAdmin ? "" : "none";
+    els.lineupFormationSel.disabled = !isAdmin;
     els.authLoggedOut.style.display = isAdmin ? "none" : "";
     els.authLoggedIn.style.display = isAdmin ? "" : "none";
     els.authPopover.classList.remove("show");
     renderStarterList();
     renderBenchList();
+    renderSquadList();
+    renderLineup();
+    renderLineupStarterList();
+    renderLineupBenchList();
   }
 
   els.adminLoginToggle.addEventListener("click", function(){
