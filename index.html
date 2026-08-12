@@ -283,6 +283,7 @@
     align-items:center;
     gap:8px;
   }
+  h2.section-title .btn{margin-left:auto; text-transform:none; letter-spacing:normal;}
   h2.section-title .count{
     font-family:var(--font-mono);
     color:var(--accent);
@@ -787,7 +788,7 @@
     <aside class="sidebar">
 
       <div class="panel">
-        <h2 class="section-title">Starting XI <span class="count">XI</span></h2>
+        <h2 class="section-title">Starting XI <span class="count">XI</span><button class="btn tiny no-print" id="clearStartersBtn" type="button" style="display:none;">Clear</button></h2>
         <div id="starterList"></div>
       </div>
 
@@ -881,7 +882,7 @@
           </div>
         </div>
         <div class="panel">
-          <h2 class="section-title">Starting XI <span class="count">XI</span></h2>
+          <h2 class="section-title">Starting XI <span class="count">XI</span><button class="btn tiny no-print" id="clearLineupStartersBtn" type="button" style="display:none;">Clear</button></h2>
           <div id="lineupStarterList"></div>
         </div>
         <div class="panel">
@@ -1225,7 +1226,9 @@
     lineupBenchList: document.getElementById("lineupBenchList"),
     lineupBenchCount: document.getElementById("lineupBenchCount"),
     lineupAddBenchWrap: document.getElementById("lineupAddBenchWrap"),
-    lineupAddBenchBtn: document.getElementById("lineupAddBenchBtn")
+    lineupAddBenchBtn: document.getElementById("lineupAddBenchBtn"),
+    clearStartersBtn: document.getElementById("clearStartersBtn"),
+    clearLineupStartersBtn: document.getElementById("clearLineupStartersBtn")
   };
 
   // Falls back to an inline SVG badge if the real logo file
@@ -1699,6 +1702,14 @@
     renderBenchList();
   });
 
+  els.clearStartersBtn.addEventListener("click", function(){
+    state.players.forEach(function(p){ p.squadId = null; });
+    renderTokens();
+    renderStarterList();
+    renderBenchList();
+    showToast("Starting XI cleared");
+  });
+
   // ---------- squad (persistent roster) ----------
   function renderSquadList(){
     markDirty();
@@ -1749,8 +1760,7 @@
   }
 
   els.addSquadBtn.addEventListener("click", function(){
-    var maxNum = state.squad.reduce(function(m,x){ return Math.max(m,x.num); }, 0);
-    state.squad.push({ id:uid(), num:maxNum+1, name:"New Player", pos:"" });
+    state.squad.push({ id:uid(), num:1, name:"New Player", pos:"" });
     renderSquadList();
   });
 
@@ -1907,6 +1917,14 @@
     state.lineupBench.push({ id:uid(), squadId:null });
     renderLineupBenchList();
     renderLineup();
+  });
+
+  els.clearLineupStartersBtn.addEventListener("click", function(){
+    state.lineupStarters.forEach(function(p){ p.squadId = null; });
+    renderLineupStarterList();
+    renderLineupBenchList();
+    renderLineup();
+    showToast("Starting XI cleared");
   });
 
   els.lineupFormationSel.addEventListener("change", function(){
@@ -2232,6 +2250,8 @@
     els.addSquadBtn.style.display = isAdmin ? "" : "none";
     els.lineupAddBenchWrap.style.display = isAdmin ? "" : "none";
     els.lineupFormationSel.disabled = !isAdmin;
+    els.clearStartersBtn.style.display = isAdmin ? "" : "none";
+    els.clearLineupStartersBtn.style.display = isAdmin ? "" : "none";
     els.authLoggedOut.style.display = isAdmin ? "none" : "";
     els.authLoggedIn.style.display = isAdmin ? "" : "none";
     els.authPopover.classList.remove("show");
