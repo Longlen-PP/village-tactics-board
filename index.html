@@ -1770,12 +1770,19 @@
   // instead. On mobile that lets us use the native share sheet, which has
   // a real "Save Image" action that lands in Photos. Desktop browsers keep
   // using the <a download> link exactly as before (blob: URL instead of
-  // data: URI, same visible behavior).
+  // data: URI, same visible behavior) — Windows Edge/Chrome also implement
+  // navigator.share for files, so we gate the share-sheet path on a mobile
+  // user-agent check rather than feature detection alone, otherwise it
+  // pops the Windows Share dialog instead of just downloading.
+  function isMobileDevice(){
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
   function saveCanvasAsImage(canvas, filename, successMsg){
     canvas.toBlob(function(blob){
       if(!blob){ showToast("Could not create image"); return; }
       var file = new File([blob], filename, { type:"image/png" });
-      if(navigator.canShare && navigator.canShare({ files:[file] })){
+      if(isMobileDevice() && navigator.canShare && navigator.canShare({ files:[file] })){
         navigator.share({ files:[file] }).then(function(){
           showToast(successMsg);
         }).catch(function(err){
