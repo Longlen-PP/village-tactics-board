@@ -493,12 +493,10 @@
   }
   .token.gk .badge{background:var(--ink); color:var(--bg);}
   .token.ball .ball-face{
-    width:26px; height:26px; border-radius:50%;
-    background:#fff; border:1px solid #222;
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.05rem; line-height:1;
+    width:28px; height:28px; border-radius:50%;
     box-shadow:0 3px 8px rgba(0,0,0,.45);
   }
+  .token.ball .ball-face svg{ width:100%; height:100%; display:block; }
 
   .token.opp .badge{background:var(--token-b); border-color:#eaf3fb;}
   .token.opp.gk .badge{background:var(--ink); color:var(--bg);}
@@ -1445,6 +1443,31 @@
   // The ball is a single optional draggable token (state.ball = {x,y} or null),
   // kept in the tokens layer above the players so it's never hidden under one.
   var ballEl = null;
+  // Classic black-and-white ball drawn as inline SVG (the ⚽ emoji renders
+  // differently per OS — blue globe on some — and can't be made transparent).
+  function ballSvg(){
+    function pent(cx, cy, r, rot){
+      var pts = [];
+      for(var k = 0; k < 5; k++){
+        var a = (rot + 72 * k) * Math.PI / 180;
+        pts.push((cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1));
+      }
+      return pts.join(" ");
+    }
+    var g = '<polygon points="' + pent(0, 0, 17, -90) + '"/>';
+    for(var k = 0; k < 5; k++){
+      var a = (-90 + 72 * k) * Math.PI / 180;
+      var x1 = 17 * Math.cos(a), y1 = 17 * Math.sin(a);
+      var x2 = 32 * Math.cos(a), y2 = 32 * Math.sin(a);
+      g += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke-width="3"/>';
+      g += '<polygon points="' + pent(47 * Math.cos(a), 47 * Math.sin(a), 15, -90 + 72 * k + 180) + '"/>';
+    }
+    return '<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><clipPath id="ballClip"><circle r="48"/></clipPath></defs>' +
+      '<circle r="48" fill="#fff"/>' +
+      '<g clip-path="url(#ballClip)" fill="#111" stroke="#111" stroke-linejoin="round">' + g + '</g>' +
+      '<circle r="48" fill="none" stroke="#111" stroke-width="4"/></svg>';
+  }
   function renderBall(){
     markDirty();
     els.ballBtn.textContent = state.ball ? "⚽ Remove Ball" : "⚽ Add Ball";
@@ -1454,7 +1477,7 @@
     }
     if(!ballEl){
       ballEl = document.createElement("div");
-      ballEl.innerHTML = '<div class="ball-face">⚽</div>';
+      ballEl.innerHTML = '<div class="ball-face">' + ballSvg() + '</div>';
       els.tokensLayer.appendChild(ballEl);
       makeTokenDraggable(ballEl, function(){ return state.ball; });
     }
