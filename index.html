@@ -492,6 +492,13 @@
     letter-spacing:.02em;
   }
   .token.gk .badge{background:var(--ink); color:var(--bg);}
+  .token.ball .ball-face{
+    width:26px; height:26px; border-radius:50%;
+    background:#fff; border:1px solid #222;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.05rem; line-height:1;
+    box-shadow:0 3px 8px rgba(0,0,0,.45);
+  }
 
   .token.opp .badge{background:var(--token-b); border-color:#eaf3fb;}
   .token.opp.gk .badge{background:var(--ink); color:var(--bg);}
@@ -709,6 +716,7 @@
           <button class="btn tiny" id="addRectBtn">+ Rectangle</button>
           <button class="btn tiny" id="addCircleBtn">+ Circle</button>
           <button class="btn tiny" id="clearZonesBtn">Clear Zones</button>
+          <button class="btn tiny" id="ballBtn">⚽ Add Ball</button>
         </div>
 
         <div class="toolbar-row">
@@ -1138,6 +1146,7 @@
     showOpponent:false,
     oppFormation:"442",
     oppPlayers: buildOpponent("442","landscape"),
+    ball: null,
     zones: [],
     selectedZoneId: null,
     zoneColor: PALETTE[0],
@@ -1185,6 +1194,7 @@
     addRectBtn: document.getElementById("addRectBtn"),
     addCircleBtn: document.getElementById("addCircleBtn"),
     clearZonesBtn: document.getElementById("clearZonesBtn"),
+    ballBtn: document.getElementById("ballBtn"),
     teamAColorSwatches: document.getElementById("teamAColorSwatches"),
     teamBColorSwatches: document.getElementById("teamBColorSwatches"),
     teamBColorField: document.getElementById("teamBColorField"),
@@ -1431,6 +1441,31 @@
       if(!seen[id]){ tokenEls[id].remove(); delete tokenEls[id]; }
     });
   }
+
+  // The ball is a single optional draggable token (state.ball = {x,y} or null),
+  // kept in the tokens layer above the players so it's never hidden under one.
+  var ballEl = null;
+  function renderBall(){
+    markDirty();
+    els.ballBtn.textContent = state.ball ? "⚽ Remove Ball" : "⚽ Add Ball";
+    if(!state.ball){
+      if(ballEl){ ballEl.remove(); ballEl = null; }
+      return;
+    }
+    if(!ballEl){
+      ballEl = document.createElement("div");
+      ballEl.innerHTML = '<div class="ball-face">⚽</div>';
+      els.tokensLayer.appendChild(ballEl);
+      makeTokenDraggable(ballEl, function(){ return state.ball; });
+    }
+    ballEl.className = "token ball";
+    ballEl.style.left = state.ball.x + "%";
+    ballEl.style.top = state.ball.y + "%";
+  }
+  els.ballBtn.addEventListener("click", function(){
+    state.ball = state.ball ? null : { x:50, y:50 };
+    renderBall();
+  });
 
   var oppTokenEls = {};
   function renderOpponent(){
@@ -1807,12 +1842,31 @@
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   }
 
+  // html2canvas 1.4.1 can't render repeating-linear-gradient (the pitch's
+  // mowed-grass stripes), so the exported image lost its green background.
+  // In the cloned DOM only, swap it for an equivalent plain linear-gradient
+  // with hard stops (8 alternating bands, same as the on-screen pattern).
+  function flattenPitchStripes(clonedDoc){
+    var cs = getComputedStyle(document.documentElement);
+    var a = cs.getPropertyValue("--pitch-a").trim() || "#2f6b3c";
+    var b = cs.getPropertyValue("--pitch-b").trim() || "#2a6136";
+    var stops = [];
+    for(var i = 0; i < 8; i++){
+      var c = (i % 2 === 0) ? a : b;
+      stops.push(c + " " + (i * 12.5) + "%", c + " " + ((i + 1) * 12.5) + "%");
+    }
+    var grad = "linear-gradient(180deg, " + stops.join(", ") + ")";
+    clonedDoc.querySelectorAll(".pitch-wrap, .lineup-pitch-wrap").forEach(function(el){
+      el.style.background = grad;
+    });
+  }
+
   // ---------- save board as image ----------
   els.saveImageBtn.addEventListener("click", function(){
     if(!window.html2canvas){ showToast("Image tool still loading, try again in a moment"); return; }
     var hadSelection = state.selectedZoneId;
     if(hadSelection){ state.selectedZoneId = null; renderZones(); }
-    html2canvas(els.pitchWrap, { backgroundColor:null, scale:2 }).then(function(canvas){
+    html2canvas(els.pitchWrap, { backgroundColor:"#2f6b3c", scale:2, onclone:flattenPitchStripes }).then(function(canvas){
       if(hadSelection){ state.selectedZoneId = hadSelection; renderZones(); }
       var safeName = (els.teamName.value || "board").replace(/[^a-z0-9]+/gi,"-").toLowerCase();
       saveCanvasAsImage(canvas, safeName + "-board.png", "Image saved");
@@ -1980,6 +2034,7 @@
     html2canvas(els.lineupCard, {
       backgroundColor:"#0d1a12",
       scale:2,
+      onclone: flattenPitchStripes,
       // The logo <img> is the one element html2canvas has been failing to
       // rasterize (broken/placeholder image sources trip it up) — skip it
       // entirely rather than let one bad image sink the whole capture.
@@ -2158,6 +2213,7 @@
       showOpponent: state.showOpponent,
       oppFormation: state.oppFormation,
       oppPlayers: state.oppPlayers,
+      ball: state.ball,
       zones: state.zones,
       zoneColor: state.zoneColor,
       tokenColorA: state.tokenColorA,
@@ -2180,6 +2236,7 @@
     state.showOpponent = !!snap.showOpponent;
     state.oppFormation = snap.oppFormation || "442";
     state.oppPlayers = snap.oppPlayers || buildOpponent(state.oppFormation, state.orientation);
+    state.ball = snap.ball || null;
     state.zones = snap.zones || [];
     state.selectedZoneId = null;
     state.zoneColor = snap.zoneColor || PALETTE[0];
@@ -2208,6 +2265,7 @@
     refreshColorSwatches();
     renderTokens();
     renderOpponent();
+    renderBall();
     renderZones();
     renderStarterList();
     renderBenchList();
